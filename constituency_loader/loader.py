@@ -1,5 +1,3 @@
-"""Load one constituency and its local directed network and relevant events."""
-
 from __future__ import annotations
 
 from pathlib import Path
