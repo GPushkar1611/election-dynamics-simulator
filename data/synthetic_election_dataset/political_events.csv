@@ -1,0 +1,279 @@
+event_id,region_id,constituency_id,event_day,source_type,event_type,issue,candidate_id,intensity,credibility,duration,target_group,candidate_effect,description
+EVT_00001,2,,1,External,Economic development,employment,,0.9007,0.7898,6,Unemployed,,Economic development news in Region 2 relating to jobs and employment.
+EVT_00002,1,1,1,External,Agricultural issue,agriculture,,0.3608,0.9320,7,Farmers,,Agricultural issue raised in Constituency 1 affecting farmers.
+EVT_00003,2,8,1,News,Policy announcement,economy,CAND_0023,0.3715,0.9066,6,Middle-income,0.2462,Policy announcement for Constituency 8 concerning the economy. Concerns National Unity Party candidate CAND_0023.
+EVT_00004,2,9,1,Candidate,Campaign rally,agriculture,CAND_0025,0.2931,0.6218,1,Rural,0.2628,Well-attended rally in Constituency 9 addressing agriculture and farmers. Led by Progressive Alliance candidate CAND_0025.
+EVT_00005,2,10,1,News,Controversy,general,CAND_0028,0.6562,0.5479,4,Urban,-0.3509,Public row in Constituency 10 drew media attention (general local concerns). Concerns Progressive Alliance candidate CAND_0028.
+EVT_00006,2,12,1,Candidate,Campaign rally,employment,CAND_0035,0.5287,0.7808,2,Students,0.1855,Well-attended rally in Constituency 12 addressing jobs and employment. Led by National Unity Party candidate CAND_0035.
+EVT_00007,2,13,1,News,Economic development,agriculture,CAND_0038,0.8817,0.9924,3,Rural,0.2892,Economic development news in Constituency 13 relating to agriculture and farmers. Concerns National Unity Party candidate CAND_0038.
+EVT_00008,3,18,1,News,Controversy,economy,CAND_0053,0.6471,0.4894,3,General,-0.2630,Public row in Constituency 18 drew media attention (the economy). Concerns National Unity Party candidate CAND_0053.
+EVT_00009,3,20,1,External,Other,economy,,0.1370,0.9431,3,High-income,,Minor political news in Constituency 20 (the economy).
+EVT_00010,,,2,External,Healthcare issue,healthcare,,0.2886,0.7118,6,General,,Public health concern raised in the state.
+EVT_00011,3,,2,Candidate,Policy announcement,employment,CAND_0053,0.0746,0.6573,5,Low-income,0.1009,Policy announcement for Region 3 concerning jobs and employment. Led by National Unity Party candidate CAND_0053.
+EVT_00012,1,3,2,Candidate,Employment announcement,employment,CAND_0007,0.3240,0.7613,2,Students,0.3765,Employment drive announced in Constituency 3. Led by Progressive Alliance candidate CAND_0007.
+EVT_00013,1,6,2,News,Controversy,general,CAND_0017,0.9368,0.8721,7,Middle-income,-0.8518,Public row in Constituency 6 drew media attention (general local concerns). Concerns National Unity Party candidate CAND_0017.
+EVT_00014,1,7,2,News,Agricultural issue,agriculture,,0.3573,0.5284,7,Farmers,,Farm-sector concern reported in Constituency 7.
+EVT_00015,2,8,2,Candidate,Education initiative,education,CAND_0024,0.4843,0.8020,7,Students,-0.2148,Education initiative announced in Constituency 8. Led by People's Front candidate CAND_0024.
+EVT_00016,2,9,2,News,Policy announcement,healthcare,,0.4354,0.8240,5,Low-income,,New policy proposal on healthcare announced in Constituency 9.
+EVT_00017,2,10,2,News,Economic development,agriculture,CAND_0028,0.8332,0.4793,5,Rural,0.1569,Economic development news in Constituency 10 relating to agriculture and farmers. Concerns Progressive Alliance candidate CAND_0028.
+EVT_00018,3,16,2,Candidate,Manifesto announcement,healthcare,CAND_0046,0.2350,0.8184,8,Low-income,0.0129,Manifesto announced in Constituency 16 with a focus on healthcare. Led by Progressive Alliance candidate CAND_0046.
+EVT_00019,3,19,2,News,Other,education,CAND_0056,0.3161,0.5385,1,Students,-0.0673,Miscellaneous political development in Constituency 19 (education). Concerns National Unity Party candidate CAND_0056.
+EVT_00020,3,,3,External,Healthcare issue,healthcare,,0.1519,0.9448,3,General,,Public health concern raised in Region 3.
+EVT_00021,1,4,3,News,Economic development,economy,CAND_0011,0.6554,0.4573,8,Rural,-0.0644,Economic development news in Constituency 4 relating to the economy. Concerns National Unity Party candidate CAND_0011.
+EVT_00022,1,7,3,External,Economic development,employment,,0.8072,0.8304,10,Rural,,New development project reported in Constituency 7 (jobs and employment).
+EVT_00023,1,7,3,News,Agricultural issue,agriculture,,0.8210,0.6819,10,Farmers,,Agricultural issue raised in Constituency 7 affecting farmers.
+EVT_00024,2,8,3,News,Economic development,economy,CAND_0022,0.6800,0.4633,6,Urban,0.4094,Economic development news in Constituency 8 relating to the economy. Concerns Progressive Alliance candidate CAND_0022.
+EVT_00025,1,2,4,Candidate,Policy announcement,healthcare,CAND_0006,0.8042,0.4104,9,General,0.2100,New policy proposal on healthcare announced in Constituency 2. Led by People's Front candidate CAND_0006.
+EVT_00026,2,12,4,News,Economic development,employment,CAND_0036,0.5066,0.5051,4,Unemployed,0.4233,New development project reported in Constituency 12 (jobs and employment). Concerns People's Front candidate CAND_0036.
+EVT_00027,3,15,4,Candidate,Campaign rally,employment,CAND_0044,0.6490,0.4941,1,Unemployed,-0.0710,Campaign rally held in Constituency 15 centred on jobs and employment. Led by National Unity Party candidate CAND_0044.
+EVT_00028,3,16,4,News,Controversy,economy,,0.4869,0.2760,2,Middle-income,,Controversy reported in Constituency 16 touching on the economy.
+EVT_00029,3,18,4,News,Policy announcement,education,,0.4236,0.7083,7,Students,,New policy proposal on education announced in Constituency 18.
+EVT_00030,3,20,4,News,Economic development,economy,CAND_0059,0.5088,0.8420,8,General,0.0391,New development project reported in Constituency 20 (the economy). Concerns National Unity Party candidate CAND_0059.
+EVT_00031,,,5,News,Controversy,healthcare,,0.3891,0.5254,11,General,,Public row in the state drew media attention (healthcare).
+EVT_00032,1,,5,News,Other,general,,0.5965,0.9783,2,General,,Minor political news in Region 1 (general local concerns).
+EVT_00033,2,12,5,External,Economic development,economy,,0.3048,0.9239,3,Middle-income,,New development project reported in Constituency 12 (the economy).
+EVT_00034,3,17,5,News,Agricultural issue,agriculture,CAND_0049,0.7592,0.3826,26,Rural,-0.2395,Farm-sector concern reported in Constituency 17. Concerns Progressive Alliance candidate CAND_0049.
+EVT_00035,3,17,5,News,Economic development,agriculture,,0.4362,0.7720,2,Rural,,Economic development news in Constituency 17 relating to agriculture and farmers.
+EVT_00036,2,,6,Candidate,Campaign rally,general,CAND_0026,0.9563,0.5702,1,Rural,-0.0022,Well-attended rally in Region 2 addressing general local concerns. Led by National Unity Party candidate CAND_0026.
+EVT_00037,2,,6,Candidate,Campaign rally,healthcare,CAND_0042,0.4098,0.4577,1,General,0.1879,Well-attended rally in Region 2 addressing healthcare. Led by People's Front candidate CAND_0042.
+EVT_00038,1,1,6,External,External economic shock,agriculture,,0.8917,0.8233,6,Rural,,Sudden economic disruption reaching Constituency 1 (agriculture and farmers).
+EVT_00039,2,8,6,Candidate,Employment announcement,employment,CAND_0024,0.4455,0.5410,4,General,-0.0661,Employment drive announced in Constituency 8. Led by People's Front candidate CAND_0024.
+EVT_00040,2,9,6,Candidate,Manifesto announcement,education,CAND_0027,0.2680,0.7622,4,Students,0.2871,Manifesto announced in Constituency 9 with a focus on education. Led by People's Front candidate CAND_0027.
+EVT_00041,2,11,6,News,Other,general,CAND_0031,0.5486,0.6630,2,General,-0.0551,Minor political news in Constituency 11 (general local concerns). Concerns Progressive Alliance candidate CAND_0031.
+EVT_00042,2,11,6,External,Other,employment,,0.4858,0.9665,1,Students,,Miscellaneous political development in Constituency 11 (jobs and employment).
+EVT_00043,1,1,7,Candidate,Manifesto announcement,employment,CAND_0001,0.6717,0.4217,4,Unemployed,0.2504,"Campaign promises released for Constituency 1, emphasising jobs and employment. Led by Progressive Alliance candidate CAND_0001."
+EVT_00044,1,3,7,Candidate,Education initiative,education,CAND_0007,0.2736,0.2001,2,Students,-0.2267,New schooling and education plan unveiled in Constituency 3. Led by Progressive Alliance candidate CAND_0007.
+EVT_00045,1,7,7,External,External economic shock,employment,,0.5869,0.5853,10,Unemployed,,Sudden economic disruption reaching Constituency 7 (jobs and employment).
+EVT_00046,1,7,7,News,Economic development,economy,,0.3310,0.9535,6,General,,Economic development news in Constituency 7 relating to the economy.
+EVT_00047,2,14,7,Candidate,Campaign rally,general,CAND_0040,0.2839,0.5678,1,Low-income,0.0264,Campaign rally held in Constituency 14 centred on general local concerns. Led by Progressive Alliance candidate CAND_0040.
+EVT_00048,3,20,7,External,Other,employment,,0.7832,0.4795,1,General,,Miscellaneous political development in Constituency 20 (jobs and employment).
+EVT_00049,3,21,7,Candidate,Campaign rally,employment,CAND_0062,0.8732,0.3448,1,Urban,0.2883,Campaign rally held in Constituency 21 centred on jobs and employment. Led by National Unity Party candidate CAND_0062.
+EVT_00050,3,21,7,Candidate,Campaign rally,education,CAND_0063,0.9089,0.2647,2,Low-income,-0.1187,Well-attended rally in Constituency 21 addressing education. Led by People's Front candidate CAND_0063.
+EVT_00051,1,,8,News,Controversy,economy,,0.9150,0.2794,7,Urban,,Controversy reported in Region 1 touching on the economy.
+EVT_00052,1,5,8,Candidate,Other,general,CAND_0013,0.3899,0.7108,1,General,-0.2246,Miscellaneous political development in Constituency 5 (general local concerns). Led by Progressive Alliance candidate CAND_0013.
+EVT_00053,2,12,8,News,Agricultural issue,agriculture,CAND_0035,0.6341,0.7094,6,Farmers,-0.1733,Agricultural issue raised in Constituency 12 affecting farmers. Concerns National Unity Party candidate CAND_0035.
+EVT_00054,3,17,8,External,Other,employment,,0.3750,0.9393,2,Unemployed,,Minor political news in Constituency 17 (jobs and employment).
+EVT_00055,3,17,8,News,Agricultural issue,agriculture,CAND_0051,0.3906,0.3644,6,Low-income,-0.0114,Agricultural issue raised in Constituency 17 affecting farmers. Concerns People's Front candidate CAND_0051.
+EVT_00056,3,18,8,Candidate,Manifesto announcement,economy,CAND_0054,0.6024,0.5473,7,Rural,0.1089,Manifesto announced in Constituency 18 with a focus on the economy. Led by People's Front candidate CAND_0054.
+EVT_00057,3,19,8,News,Controversy,general,,0.3048,0.4428,5,General,,Controversy reported in Constituency 19 touching on general local concerns.
+EVT_00058,3,19,8,News,Controversy,agriculture,CAND_0056,0.5317,0.6578,7,Rural,-0.3475,Public row in Constituency 19 drew media attention (agriculture and farmers). Concerns National Unity Party candidate CAND_0056.
+EVT_00059,3,21,8,Candidate,Campaign rally,education,CAND_0062,0.5023,0.6248,1,Students,0.0893,Campaign rally held in Constituency 21 centred on education. Led by National Unity Party candidate CAND_0062.
+EVT_00060,,,9,News,Education initiative,education,,0.2527,0.4308,6,Students,,New schooling and education plan unveiled in the state.
+EVT_00061,1,1,9,News,Healthcare issue,healthcare,CAND_0001,0.3586,0.8654,10,Rural,0.0806,Healthcare issue reported in Constituency 1. Concerns Progressive Alliance candidate CAND_0001.
+EVT_00062,1,2,9,News,Economic development,employment,,0.6227,0.5775,6,Students,,New development project reported in Constituency 2 (jobs and employment).
+EVT_00063,1,3,9,Candidate,Manifesto announcement,agriculture,CAND_0007,0.5555,0.2698,3,Farmers,0.2645,Manifesto announced in Constituency 3 with a focus on agriculture and farmers. Led by Progressive Alliance candidate CAND_0007.
+EVT_00064,1,5,9,News,Agricultural issue,agriculture,CAND_0015,0.5642,0.8924,4,Farmers,0.4361,Agricultural issue raised in Constituency 5 affecting farmers. Concerns People's Front candidate CAND_0015.
+EVT_00065,1,6,9,News,Controversy,general,CAND_0018,0.5156,0.6845,5,General,-0.4056,Public row in Constituency 6 drew media attention (general local concerns). Concerns People's Front candidate CAND_0018.
+EVT_00066,1,7,9,Candidate,Manifesto announcement,education,CAND_0021,0.4443,0.3165,3,General,0.1681,Manifesto announced in Constituency 7 with a focus on education. Led by People's Front candidate CAND_0021.
+EVT_00067,2,9,9,News,Policy announcement,agriculture,CAND_0026,0.7779,0.5990,2,General,0.1780,Policy announcement for Constituency 9 concerning agriculture and farmers. Concerns National Unity Party candidate CAND_0026.
+EVT_00068,2,10,9,News,Agricultural issue,agriculture,CAND_0028,0.4655,0.8174,9,Farmers,0.2015,Agricultural issue raised in Constituency 10 affecting farmers. Concerns Progressive Alliance candidate CAND_0028.
+EVT_00069,2,11,9,News,Policy announcement,employment,CAND_0032,0.7252,0.8798,1,Unemployed,0.2009,Policy announcement for Constituency 11 concerning jobs and employment. Concerns National Unity Party candidate CAND_0032.
+EVT_00070,2,12,9,Candidate,Policy announcement,economy,CAND_0035,0.6023,0.1844,2,High-income,0.0486,New policy proposal on the economy announced in Constituency 12. Led by National Unity Party candidate CAND_0035.
+EVT_00071,2,14,9,Candidate,Campaign rally,healthcare,CAND_0040,0.8003,0.5407,1,Middle-income,0.2290,Well-attended rally in Constituency 14 addressing healthcare. Led by Progressive Alliance candidate CAND_0040.
+EVT_00072,2,14,9,External,External economic shock,economy,,0.8021,0.8197,8,General,,Sudden economic disruption reaching Constituency 14 (the economy).
+EVT_00073,3,20,9,External,Other,healthcare,,0.4689,0.6383,1,Low-income,,Miscellaneous political development in Constituency 20 (healthcare).
+EVT_00074,3,21,9,Candidate,Manifesto announcement,education,CAND_0061,0.7747,0.5836,5,General,0.1363,Manifesto announced in Constituency 21 with a focus on education. Led by Progressive Alliance candidate CAND_0061.
+EVT_00075,1,1,10,Candidate,Campaign rally,employment,CAND_0001,0.6370,0.4960,2,Unemployed,0.2835,Campaign rally held in Constituency 1 centred on jobs and employment. Led by Progressive Alliance candidate CAND_0001.
+EVT_00076,1,3,10,Candidate,Manifesto announcement,agriculture,CAND_0008,0.4258,0.6512,3,Farmers,0.2360,"Campaign promises released for Constituency 3, emphasising agriculture and farmers. Led by National Unity Party candidate CAND_0008."
+EVT_00077,1,4,10,News,Controversy,general,CAND_0012,0.5888,0.4045,2,General,0.0255,Public row in Constituency 4 drew media attention (general local concerns). Concerns People's Front candidate CAND_0012.
+EVT_00078,2,9,10,External,Other,general,,0.6953,0.9478,2,General,,Miscellaneous political development in Constituency 9 (general local concerns).
+EVT_00079,2,14,10,External,Healthcare issue,healthcare,,0.4163,0.7080,15,Low-income,,Public health concern raised in Constituency 14.
+EVT_00080,1,1,11,Candidate,Controversy,general,CAND_0003,0.6765,0.7104,5,General,-0.7725,Controversy reported in Constituency 1 touching on general local concerns. Led by People's Front candidate CAND_0003.
+EVT_00081,1,6,11,News,Employment announcement,employment,CAND_0018,0.4552,0.6096,7,Low-income,0.0119,Job-creation announcement made in Constituency 6. Concerns People's Front candidate CAND_0018.
+EVT_00082,2,8,11,News,Economic development,economy,CAND_0023,0.2258,0.8398,8,Low-income,0.1642,New development project reported in Constituency 8 (the economy). Concerns National Unity Party candidate CAND_0023.
+EVT_00083,2,11,11,Candidate,Campaign rally,education,CAND_0031,0.5865,0.7326,1,Students,0.4249,Well-attended rally in Constituency 11 addressing education. Led by Progressive Alliance candidate CAND_0031.
+EVT_00084,2,11,11,Candidate,Employment announcement,employment,CAND_0031,0.7293,0.4108,7,Urban,0.3259,Job-creation announcement made in Constituency 11. Led by Progressive Alliance candidate CAND_0031.
+EVT_00085,2,11,11,Candidate,Campaign rally,economy,CAND_0032,0.4438,0.7477,1,High-income,0.0725,Campaign rally held in Constituency 11 centred on the economy. Led by National Unity Party candidate CAND_0032.
+EVT_00086,2,13,11,Candidate,Campaign rally,healthcare,CAND_0039,0.5036,0.1683,1,General,0.1267,Campaign rally held in Constituency 13 centred on healthcare. Led by People's Front candidate CAND_0039.
+EVT_00087,3,17,11,Candidate,Manifesto announcement,agriculture,CAND_0050,0.5678,0.6730,5,Low-income,0.0192,"Campaign promises released for Constituency 17, emphasising agriculture and farmers. Led by National Unity Party candidate CAND_0050."
+EVT_00088,3,17,11,Candidate,Campaign rally,employment,CAND_0050,0.5809,0.4954,1,General,0.3060,Well-attended rally in Constituency 17 addressing jobs and employment. Led by National Unity Party candidate CAND_0050.
+EVT_00089,3,20,11,Candidate,Policy announcement,employment,CAND_0059,0.1973,0.3331,2,Unemployed,-0.0464,New policy proposal on jobs and employment announced in Constituency 20. Led by National Unity Party candidate CAND_0059.
+EVT_00090,1,3,12,Candidate,Education initiative,education,CAND_0007,0.6121,0.4067,2,General,-0.2362,Education initiative announced in Constituency 3. Led by Progressive Alliance candidate CAND_0007.
+EVT_00091,1,4,12,Candidate,Manifesto announcement,agriculture,CAND_0012,0.4437,0.5358,2,Farmers,-0.0189,Manifesto announced in Constituency 4 with a focus on agriculture and farmers. Led by People's Front candidate CAND_0012.
+EVT_00092,1,7,12,Candidate,Controversy,general,CAND_0019,0.8463,0.5716,2,General,-0.1272,Controversy reported in Constituency 7 touching on general local concerns. Led by Progressive Alliance candidate CAND_0019.
+EVT_00093,2,14,12,News,Employment announcement,employment,CAND_0042,0.3558,0.8787,19,Unemployed,0.0482,Job-creation announcement made in Constituency 14. Concerns People's Front candidate CAND_0042.
+EVT_00094,2,14,12,Candidate,Campaign rally,general,CAND_0040,0.4078,0.4321,1,General,0.1587,Well-attended rally in Constituency 14 addressing general local concerns. Led by Progressive Alliance candidate CAND_0040.
+EVT_00095,3,18,12,Candidate,Manifesto announcement,economy,CAND_0053,0.3051,0.7979,5,Low-income,0.2344,Manifesto announced in Constituency 18 with a focus on the economy. Led by National Unity Party candidate CAND_0053.
+EVT_00096,3,19,12,Candidate,Campaign rally,employment,CAND_0055,0.4807,0.5424,1,General,0.2134,Campaign rally held in Constituency 19 centred on jobs and employment. Led by Progressive Alliance candidate CAND_0055.
+EVT_00097,1,3,13,Candidate,Policy announcement,economy,CAND_0007,0.5489,0.6526,5,General,0.0888,New policy proposal on the economy announced in Constituency 3. Led by Progressive Alliance candidate CAND_0007.
+EVT_00098,1,4,13,News,Education initiative,education,,0.6762,0.7878,3,Rural,,New schooling and education plan unveiled in Constituency 4.
+EVT_00099,1,4,13,News,Policy announcement,economy,,0.8279,0.3773,4,General,,Policy announcement for Constituency 4 concerning the economy.
+EVT_00100,2,8,13,Candidate,Other,general,CAND_0024,0.6854,0.3405,3,General,0.0193,Miscellaneous political development in Constituency 8 (general local concerns). Led by People's Front candidate CAND_0024.
+EVT_00101,3,18,13,External,Healthcare issue,healthcare,,0.4330,0.8016,4,Low-income,,Healthcare issue reported in Constituency 18.
+EVT_00102,3,21,13,Candidate,Controversy,general,CAND_0063,0.6100,0.5601,3,General,-0.3667,Controversy reported in Constituency 21 touching on general local concerns. Led by People's Front candidate CAND_0063.
+EVT_00103,2,,14,News,Economic development,economy,,0.5832,0.9356,13,Urban,,New development project reported in Region 2 (the economy).
+EVT_00104,1,3,14,External,Economic development,economy,,0.7129,0.8176,6,Rural,,New development project reported in Constituency 3 (the economy).
+EVT_00105,1,4,14,News,Other,general,,0.4295,0.7146,4,Urban,,Minor political news in Constituency 4 (general local concerns).
+EVT_00106,1,5,14,Candidate,Campaign rally,employment,CAND_0014,0.5158,0.7767,1,Rural,0.0536,Well-attended rally in Constituency 5 addressing jobs and employment. Led by National Unity Party candidate CAND_0014.
+EVT_00107,2,9,14,Candidate,Education initiative,education,CAND_0027,0.2805,0.1448,9,General,0.0047,Education initiative announced in Constituency 9. Led by People's Front candidate CAND_0027.
+EVT_00108,2,10,14,Candidate,Controversy,employment,CAND_0029,0.6106,0.4461,6,Urban,-0.0820,Controversy reported in Constituency 10 touching on jobs and employment. Led by National Unity Party candidate CAND_0029.
+EVT_00109,2,13,14,News,Economic development,agriculture,CAND_0039,0.3450,0.5138,11,General,-0.1862,New development project reported in Constituency 13 (agriculture and farmers). Concerns People's Front candidate CAND_0039.
+EVT_00110,2,13,14,News,Healthcare issue,healthcare,CAND_0038,0.2044,0.6752,5,General,0.1221,Healthcare issue reported in Constituency 13. Concerns National Unity Party candidate CAND_0038.
+EVT_00111,3,18,14,External,External economic shock,employment,,0.5050,0.9255,11,Low-income,,External economic shock affecting Constituency 18 (jobs and employment).
+EVT_00112,2,,15,News,Economic development,agriculture,,0.4332,0.9075,10,Farmers,,Economic development news in Region 2 relating to agriculture and farmers.
+EVT_00113,1,4,15,Candidate,Manifesto announcement,healthcare,CAND_0012,0.5385,0.6116,6,Middle-income,0.1463,Manifesto announced in Constituency 4 with a focus on healthcare. Led by People's Front candidate CAND_0012.
+EVT_00114,2,8,15,News,Controversy,healthcare,,0.8297,0.5049,2,General,,Public row in Constituency 8 drew media attention (healthcare).
+EVT_00115,2,11,15,Candidate,Policy announcement,employment,CAND_0032,0.3903,0.5874,5,Low-income,0.4363,New policy proposal on jobs and employment announced in Constituency 11. Led by National Unity Party candidate CAND_0032.
+EVT_00116,2,12,15,Candidate,Manifesto announcement,employment,CAND_0034,0.7777,0.2517,6,Low-income,0.2927,Manifesto announced in Constituency 12 with a focus on jobs and employment. Led by Progressive Alliance candidate CAND_0034.
+EVT_00117,3,16,15,News,Controversy,general,,0.8910,0.2032,7,General,,Public row in Constituency 16 drew media attention (general local concerns).
+EVT_00118,1,,16,News,Healthcare issue,healthcare,,0.2526,0.4825,3,Rural,,Healthcare issue reported in Region 1.
+EVT_00119,1,4,16,Candidate,Employment announcement,employment,CAND_0012,0.7719,0.4498,4,Unemployed,0.2536,Employment drive announced in Constituency 4. Led by People's Front candidate CAND_0012.
+EVT_00120,1,7,16,Candidate,Policy announcement,healthcare,CAND_0021,0.3348,0.5544,3,Urban,-0.0114,Policy announcement for Constituency 7 concerning healthcare. Led by People's Front candidate CAND_0021.
+EVT_00121,2,8,16,Candidate,Policy announcement,education,CAND_0022,0.4861,0.2494,4,Students,0.2904,Policy announcement for Constituency 8 concerning education. Led by Progressive Alliance candidate CAND_0022.
+EVT_00122,2,8,16,External,Healthcare issue,healthcare,,0.4359,0.8435,8,General,,Healthcare issue reported in Constituency 8.
+EVT_00123,3,15,16,Candidate,Policy announcement,economy,CAND_0043,0.5968,0.3729,6,General,-0.1689,New policy proposal on the economy announced in Constituency 15. Led by Progressive Alliance candidate CAND_0043.
+EVT_00124,3,15,16,Candidate,Policy announcement,healthcare,CAND_0043,0.3864,0.4649,3,Middle-income,0.1727,New policy proposal on healthcare announced in Constituency 15. Led by Progressive Alliance candidate CAND_0043.
+EVT_00125,1,4,17,News,Other,general,CAND_0010,0.1043,0.6716,2,General,0.1008,Miscellaneous political development in Constituency 4 (general local concerns). Concerns Progressive Alliance candidate CAND_0010.
+EVT_00126,1,6,17,Candidate,Policy announcement,education,CAND_0016,0.4955,0.5119,10,Rural,0.1251,Policy announcement for Constituency 6 concerning education. Led by Progressive Alliance candidate CAND_0016.
+EVT_00127,2,10,17,Candidate,Other,general,CAND_0030,0.4282,0.5059,2,High-income,0.1904,Miscellaneous political development in Constituency 10 (general local concerns). Led by People's Front candidate CAND_0030.
+EVT_00128,2,12,17,Candidate,Campaign rally,education,CAND_0035,0.9193,0.5927,2,Students,0.2545,Well-attended rally in Constituency 12 addressing education. Led by National Unity Party candidate CAND_0035.
+EVT_00129,2,14,17,Candidate,Controversy,general,CAND_0040,0.5313,0.3970,3,General,-0.0256,Controversy reported in Constituency 14 touching on general local concerns. Led by Progressive Alliance candidate CAND_0040.
+EVT_00130,3,20,17,Candidate,Employment announcement,employment,CAND_0058,0.7783,0.2211,13,Low-income,0.1611,Employment drive announced in Constituency 20. Led by Progressive Alliance candidate CAND_0058.
+EVT_00131,3,21,17,News,Other,education,CAND_0061,0.1419,0.5790,3,Students,-0.0260,Minor political news in Constituency 21 (education). Concerns Progressive Alliance candidate CAND_0061.
+EVT_00132,3,21,17,News,Agricultural issue,agriculture,CAND_0061,0.2706,0.8935,8,Rural,-0.0807,Farm-sector concern reported in Constituency 21. Concerns Progressive Alliance candidate CAND_0061.
+EVT_00133,3,21,17,Candidate,Campaign rally,education,CAND_0061,0.3719,0.3339,1,Students,-0.1572,Well-attended rally in Constituency 21 addressing education. Led by Progressive Alliance candidate CAND_0061.
+EVT_00134,,,18,News,Agricultural issue,agriculture,,0.4769,0.6967,3,Farmers,,Farm-sector concern reported in the state.
+EVT_00135,1,7,18,News,Economic development,agriculture,CAND_0020,0.3625,0.9270,13,Farmers,0.1167,Economic development news in Constituency 7 relating to agriculture and farmers. Concerns National Unity Party candidate CAND_0020.
+EVT_00136,2,9,18,Candidate,Policy announcement,economy,CAND_0025,0.5791,0.4380,2,Low-income,0.2591,New policy proposal on the economy announced in Constituency 9. Led by Progressive Alliance candidate CAND_0025.
+EVT_00137,2,11,18,Candidate,Campaign rally,general,CAND_0031,0.3627,0.5072,1,Rural,0.3662,Campaign rally held in Constituency 11 centred on general local concerns. Led by Progressive Alliance candidate CAND_0031.
+EVT_00138,2,11,18,Candidate,Education initiative,education,CAND_0032,0.7599,0.8417,3,General,-0.0737,Education initiative announced in Constituency 11. Led by National Unity Party candidate CAND_0032.
+EVT_00139,2,12,18,Candidate,Campaign rally,economy,CAND_0036,0.8160,0.6407,1,General,0.3135,Campaign rally held in Constituency 12 centred on the economy. Led by People's Front candidate CAND_0036.
+EVT_00140,2,14,18,News,Controversy,general,CAND_0040,0.8060,0.5362,4,Rural,-0.3322,Controversy reported in Constituency 14 touching on general local concerns. Concerns Progressive Alliance candidate CAND_0040.
+EVT_00141,3,15,18,Candidate,Manifesto announcement,education,CAND_0043,0.7892,0.4720,5,Students,0.3088,Manifesto announced in Constituency 15 with a focus on education. Led by Progressive Alliance candidate CAND_0043.
+EVT_00142,3,16,18,News,Economic development,employment,CAND_0048,0.8255,0.6533,4,General,-0.0589,Economic development news in Constituency 16 relating to jobs and employment. Concerns People's Front candidate CAND_0048.
+EVT_00143,3,17,18,Candidate,Policy announcement,agriculture,CAND_0050,0.7586,0.7188,4,Farmers,0.2524,Policy announcement for Constituency 17 concerning agriculture and farmers. Led by National Unity Party candidate CAND_0050.
+EVT_00144,3,19,18,Candidate,Manifesto announcement,employment,CAND_0057,0.8137,0.7575,1,Urban,0.0119,"Campaign promises released for Constituency 19, emphasising jobs and employment. Led by People's Front candidate CAND_0057."
+EVT_00145,3,20,18,News,Policy announcement,employment,CAND_0058,0.2170,0.2581,7,General,-0.1145,Policy announcement for Constituency 20 concerning jobs and employment. Concerns Progressive Alliance candidate CAND_0058.
+EVT_00146,3,21,18,News,Education initiative,education,,0.3667,0.7833,6,Students,,New schooling and education plan unveiled in Constituency 21.
+EVT_00147,1,5,19,Candidate,Policy announcement,economy,CAND_0014,0.8102,0.6399,3,Urban,0.6806,New policy proposal on the economy announced in Constituency 5. Led by National Unity Party candidate CAND_0014.
+EVT_00148,1,5,19,News,Agricultural issue,agriculture,CAND_0013,0.2722,0.9623,12,Farmers,-0.4258,Agricultural issue raised in Constituency 5 affecting farmers. Concerns Progressive Alliance candidate CAND_0013.
+EVT_00149,1,6,19,Candidate,Campaign rally,education,CAND_0017,0.5535,0.2828,1,Urban,0.1486,Well-attended rally in Constituency 6 addressing education. Led by National Unity Party candidate CAND_0017.
+EVT_00150,2,10,19,News,Controversy,general,CAND_0029,0.3507,0.7403,7,General,-0.4295,Public row in Constituency 10 drew media attention (general local concerns). Concerns National Unity Party candidate CAND_0029.
+EVT_00151,2,11,19,Candidate,Controversy,general,CAND_0032,0.3625,0.4781,8,General,-0.3757,Controversy reported in Constituency 11 touching on general local concerns. Led by National Unity Party candidate CAND_0032.
+EVT_00152,2,12,19,Candidate,Campaign rally,employment,CAND_0034,0.3954,0.4915,1,General,0.2235,Well-attended rally in Constituency 12 addressing jobs and employment. Led by Progressive Alliance candidate CAND_0034.
+EVT_00153,2,14,19,Candidate,Manifesto announcement,agriculture,CAND_0042,0.3556,0.4616,3,Rural,-0.0456,Manifesto announced in Constituency 14 with a focus on agriculture and farmers. Led by People's Front candidate CAND_0042.
+EVT_00154,3,15,19,News,Employment announcement,employment,,0.7131,0.2686,2,Rural,,Job-creation announcement made in Constituency 15.
+EVT_00155,3,16,19,Candidate,Policy announcement,agriculture,CAND_0046,0.7234,0.2642,5,Farmers,0.0346,New policy proposal on agriculture and farmers announced in Constituency 16. Led by Progressive Alliance candidate CAND_0046.
+EVT_00156,3,20,19,News,Economic development,employment,,0.6457,0.3002,4,General,,New development project reported in Constituency 20 (jobs and employment).
+EVT_00157,3,20,19,Candidate,Campaign rally,employment,CAND_0059,0.6120,0.4064,1,Students,0.4637,Well-attended rally in Constituency 20 addressing jobs and employment. Led by National Unity Party candidate CAND_0059.
+EVT_00158,,,20,News,Controversy,general,,0.4497,0.3147,7,General,,Controversy reported in the state touching on general local concerns.
+EVT_00159,1,2,20,Candidate,Policy announcement,healthcare,CAND_0006,0.8702,0.6384,3,General,-0.0014,New policy proposal on healthcare announced in Constituency 2. Led by People's Front candidate CAND_0006.
+EVT_00160,1,2,20,News,Economic development,agriculture,CAND_0004,0.2938,0.7252,2,General,0.1591,New development project reported in Constituency 2 (agriculture and farmers). Concerns Progressive Alliance candidate CAND_0004.
+EVT_00161,1,3,20,Candidate,Controversy,education,CAND_0008,0.8445,0.7386,7,General,0.3351,Controversy reported in Constituency 3 touching on education. Led by National Unity Party candidate CAND_0008.
+EVT_00162,1,5,20,Candidate,Campaign rally,education,CAND_0015,0.5051,0.6022,2,General,0.3942,Campaign rally held in Constituency 5 centred on education. Led by People's Front candidate CAND_0015.
+EVT_00163,1,5,20,Candidate,Policy announcement,agriculture,CAND_0014,0.2919,0.3587,2,Farmers,0.3733,Policy announcement for Constituency 5 concerning agriculture and farmers. Led by National Unity Party candidate CAND_0014.
+EVT_00164,1,6,20,Candidate,Manifesto announcement,employment,CAND_0017,0.8142,0.3835,4,Low-income,0.0434,Manifesto announced in Constituency 6 with a focus on jobs and employment. Led by National Unity Party candidate CAND_0017.
+EVT_00165,2,9,20,Candidate,Campaign rally,education,CAND_0026,0.3457,0.6507,1,Students,0.1385,Campaign rally held in Constituency 9 centred on education. Led by National Unity Party candidate CAND_0026.
+EVT_00166,2,10,20,External,External economic shock,employment,,0.8888,0.7266,5,Low-income,,External economic shock affecting Constituency 10 (jobs and employment).
+EVT_00167,2,12,20,Candidate,Other,general,CAND_0036,0.1983,0.5312,5,General,-0.1997,Miscellaneous political development in Constituency 12 (general local concerns). Led by People's Front candidate CAND_0036.
+EVT_00168,2,14,20,News,Healthcare issue,healthcare,,0.1211,0.6063,11,Urban,,Healthcare issue reported in Constituency 14.
+EVT_00169,2,14,20,Candidate,Employment announcement,employment,CAND_0040,0.8351,0.8259,3,Low-income,-0.2134,Job-creation announcement made in Constituency 14. Led by Progressive Alliance candidate CAND_0040.
+EVT_00170,3,16,20,Candidate,Campaign rally,agriculture,CAND_0046,0.2386,0.5068,2,Rural,0.2315,Campaign rally held in Constituency 16 centred on agriculture and farmers. Led by Progressive Alliance candidate CAND_0046.
+EVT_00171,3,16,20,External,External economic shock,economy,,0.8746,0.7036,8,Low-income,,Sudden economic disruption reaching Constituency 16 (the economy).
+EVT_00172,3,17,20,News,Economic development,economy,,0.5433,0.4007,5,Middle-income,,Economic development news in Constituency 17 relating to the economy.
+EVT_00173,1,5,21,Candidate,Manifesto announcement,agriculture,CAND_0014,0.6954,0.8437,6,Farmers,0.1511,Manifesto announced in Constituency 5 with a focus on agriculture and farmers. Led by National Unity Party candidate CAND_0014.
+EVT_00174,2,13,21,Candidate,Policy announcement,agriculture,CAND_0039,0.3883,0.6037,3,Farmers,0.0840,New policy proposal on agriculture and farmers announced in Constituency 13. Led by People's Front candidate CAND_0039.
+EVT_00175,3,15,21,Candidate,Policy announcement,agriculture,CAND_0043,0.7261,0.5116,9,Farmers,0.0872,New policy proposal on agriculture and farmers announced in Constituency 15. Led by Progressive Alliance candidate CAND_0043.
+EVT_00176,3,15,21,Candidate,Manifesto announcement,economy,CAND_0043,0.2120,0.3490,2,Urban,0.0068,Manifesto announced in Constituency 15 with a focus on the economy. Led by Progressive Alliance candidate CAND_0043.
+EVT_00177,3,15,21,News,Agricultural issue,agriculture,CAND_0044,0.1306,0.6409,9,Farmers,-0.0625,Agricultural issue raised in Constituency 15 affecting farmers. Concerns National Unity Party candidate CAND_0044.
+EVT_00178,3,18,21,News,Agricultural issue,agriculture,,0.2292,0.9571,5,General,,Agricultural issue raised in Constituency 18 affecting farmers.
+EVT_00179,1,,22,Candidate,Policy announcement,healthcare,CAND_0021,0.5228,0.7742,4,Rural,0.3989,New policy proposal on healthcare announced in Region 1. Led by People's Front candidate CAND_0021.
+EVT_00180,1,,22,External,Healthcare issue,healthcare,,0.4609,0.8530,6,General,,Public health concern raised in Region 1.
+EVT_00181,3,,22,External,Economic development,employment,,0.8717,0.7866,8,Low-income,,New development project reported in Region 3 (jobs and employment).
+EVT_00182,1,2,22,Candidate,Other,general,CAND_0004,0.4025,0.5487,4,General,-0.1041,Miscellaneous political development in Constituency 2 (general local concerns). Led by Progressive Alliance candidate CAND_0004.
+EVT_00183,1,2,22,Candidate,Campaign rally,employment,CAND_0005,0.2456,0.6411,1,General,0.1648,Campaign rally held in Constituency 2 centred on jobs and employment. Led by National Unity Party candidate CAND_0005.
+EVT_00184,1,3,22,News,Controversy,general,CAND_0009,0.6934,0.6605,5,General,-0.1003,Public row in Constituency 3 drew media attention (general local concerns). Concerns People's Front candidate CAND_0009.
+EVT_00185,1,5,22,Candidate,Controversy,general,CAND_0014,0.5666,0.6626,8,General,-0.3658,Controversy reported in Constituency 5 touching on general local concerns. Led by National Unity Party candidate CAND_0014.
+EVT_00186,1,7,22,Candidate,Campaign rally,education,CAND_0021,0.3941,0.5880,1,Students,0.1516,Campaign rally held in Constituency 7 centred on education. Led by People's Front candidate CAND_0021.
+EVT_00187,2,9,22,Candidate,Campaign rally,agriculture,CAND_0026,0.3660,0.7719,1,Farmers,0.4776,Campaign rally held in Constituency 9 centred on agriculture and farmers. Led by National Unity Party candidate CAND_0026.
+EVT_00188,2,10,22,Candidate,Campaign rally,employment,CAND_0029,0.7391,0.4320,1,Unemployed,0.1055,Well-attended rally in Constituency 10 addressing jobs and employment. Led by National Unity Party candidate CAND_0029.
+EVT_00189,3,15,22,Candidate,Manifesto announcement,education,CAND_0044,0.2711,0.1829,3,Students,0.0934,Manifesto announced in Constituency 15 with a focus on education. Led by National Unity Party candidate CAND_0044.
+EVT_00190,3,18,22,News,Healthcare issue,healthcare,,0.7908,0.8321,6,Rural,,Public health concern raised in Constituency 18.
+EVT_00191,3,19,22,News,Controversy,general,CAND_0055,0.8288,0.6459,4,Urban,0.4153,Public row in Constituency 19 drew media attention (general local concerns). Concerns Progressive Alliance candidate CAND_0055.
+EVT_00192,3,19,22,Candidate,Policy announcement,healthcare,CAND_0055,0.9409,0.9475,3,Middle-income,0.0855,Policy announcement for Constituency 19 concerning healthcare. Led by Progressive Alliance candidate CAND_0055.
+EVT_00193,3,19,22,News,Economic development,employment,,0.5188,0.5625,7,Low-income,,Economic development news in Constituency 19 relating to jobs and employment.
+EVT_00194,3,20,22,Candidate,Other,agriculture,CAND_0058,0.6906,0.5168,2,Farmers,-0.0065,Minor political news in Constituency 20 (agriculture and farmers). Led by Progressive Alliance candidate CAND_0058.
+EVT_00195,2,,23,News,Controversy,education,,0.6913,0.7557,3,Students,,Controversy reported in Region 2 touching on education.
+EVT_00196,3,,23,External,External economic shock,economy,,0.7094,0.8877,7,Urban,,Sudden economic disruption reaching Region 3 (the economy).
+EVT_00197,1,2,23,News,Education initiative,education,CAND_0006,0.2855,0.9168,8,General,0.1647,New schooling and education plan unveiled in Constituency 2. Concerns People's Front candidate CAND_0006.
+EVT_00198,1,4,23,News,Controversy,general,CAND_0012,0.2687,0.8660,2,General,-0.1268,Public row in Constituency 4 drew media attention (general local concerns). Concerns People's Front candidate CAND_0012.
+EVT_00199,1,5,23,Candidate,Campaign rally,agriculture,CAND_0014,0.6480,0.7505,1,Rural,0.0996,Campaign rally held in Constituency 5 centred on agriculture and farmers. Led by National Unity Party candidate CAND_0014.
+EVT_00200,1,6,23,Candidate,Policy announcement,education,CAND_0018,0.5680,0.6398,3,Students,-0.1848,New policy proposal on education announced in Constituency 6. Led by People's Front candidate CAND_0018.
+EVT_00201,2,10,23,Candidate,Campaign rally,employment,CAND_0030,0.8801,0.2627,2,Unemployed,-0.0621,Campaign rally held in Constituency 10 centred on jobs and employment. Led by People's Front candidate CAND_0030.
+EVT_00202,2,12,23,Candidate,Policy announcement,employment,CAND_0036,0.4512,0.6042,2,Students,0.2185,New policy proposal on jobs and employment announced in Constituency 12. Led by People's Front candidate CAND_0036.
+EVT_00203,2,13,23,Candidate,Campaign rally,general,CAND_0038,0.1795,0.8247,1,General,0.1719,Campaign rally held in Constituency 13 centred on general local concerns. Led by National Unity Party candidate CAND_0038.
+EVT_00204,2,13,23,News,Controversy,general,CAND_0039,0.5675,0.8252,8,Middle-income,-0.2346,Public row in Constituency 13 drew media attention (general local concerns). Concerns People's Front candidate CAND_0039.
+EVT_00205,3,15,23,Candidate,Manifesto announcement,education,CAND_0045,0.6611,0.4405,6,Low-income,0.2505,"Campaign promises released for Constituency 15, emphasising education. Led by People's Front candidate CAND_0045."
+EVT_00206,3,16,23,News,Controversy,healthcare,,0.4738,0.5229,7,Rural,,Controversy reported in Constituency 16 touching on healthcare.
+EVT_00207,3,16,23,Candidate,Campaign rally,economy,CAND_0048,0.9119,0.1324,1,High-income,-0.0238,Campaign rally held in Constituency 16 centred on the economy. Led by People's Front candidate CAND_0048.
+EVT_00208,,,24,News,Employment announcement,employment,,0.2912,0.7959,5,General,,Employment drive announced in the state.
+EVT_00209,,,24,News,Healthcare issue,healthcare,,0.7124,0.8348,7,Rural,,Public health concern raised in the state.
+EVT_00210,1,1,24,External,External economic shock,agriculture,,0.9263,0.5534,7,Farmers,,External economic shock affecting Constituency 1 (agriculture and farmers).
+EVT_00211,1,1,24,Candidate,Manifesto announcement,economy,CAND_0001,0.1825,0.6532,7,General,-0.0807,"Campaign promises released for Constituency 1, emphasising the economy. Led by Progressive Alliance candidate CAND_0001."
+EVT_00212,1,1,24,Candidate,Campaign rally,healthcare,CAND_0002,0.7896,0.3936,2,Low-income,0.2861,Campaign rally held in Constituency 1 centred on healthcare. Led by National Unity Party candidate CAND_0002.
+EVT_00213,1,4,24,News,Other,economy,CAND_0011,0.5630,0.5444,3,Rural,0.0078,Miscellaneous political development in Constituency 4 (the economy). Concerns National Unity Party candidate CAND_0011.
+EVT_00214,2,13,24,Candidate,Policy announcement,economy,CAND_0038,0.1993,0.5920,7,Middle-income,-0.0760,Policy announcement for Constituency 13 concerning the economy. Led by National Unity Party candidate CAND_0038.
+EVT_00215,3,19,24,External,External economic shock,employment,,0.9727,0.6593,7,General,,Sudden economic disruption reaching Constituency 19 (jobs and employment).
+EVT_00216,3,20,24,News,Economic development,employment,,0.4546,0.5453,5,Unemployed,,New development project reported in Constituency 20 (jobs and employment).
+EVT_00217,1,3,25,News,Controversy,agriculture,CAND_0009,0.7898,0.6001,6,Farmers,-0.1763,Public row in Constituency 3 drew media attention (agriculture and farmers). Concerns People's Front candidate CAND_0009.
+EVT_00218,1,4,25,News,Controversy,economy,,0.5289,0.6424,3,Low-income,,Public row in Constituency 4 drew media attention (the economy).
+EVT_00219,1,6,25,Candidate,Manifesto announcement,agriculture,CAND_0016,0.6865,0.5894,6,Farmers,0.2223,Manifesto announced in Constituency 6 with a focus on agriculture and farmers. Led by Progressive Alliance candidate CAND_0016.
+EVT_00220,1,6,25,Candidate,Campaign rally,education,CAND_0018,0.7709,0.6186,1,Students,0.1873,Well-attended rally in Constituency 6 addressing education. Led by People's Front candidate CAND_0018.
+EVT_00221,1,6,25,News,Economic development,agriculture,,0.0643,0.8733,6,Low-income,,New development project reported in Constituency 6 (agriculture and farmers).
+EVT_00222,2,13,25,External,External economic shock,economy,,0.3153,0.9348,6,Low-income,,External economic shock affecting Constituency 13 (the economy).
+EVT_00223,2,13,25,Candidate,Campaign rally,employment,CAND_0038,0.5321,0.5842,1,General,-0.1790,Well-attended rally in Constituency 13 addressing jobs and employment. Led by National Unity Party candidate CAND_0038.
+EVT_00224,3,16,25,Candidate,Campaign rally,healthcare,CAND_0048,0.4374,0.4156,1,Rural,0.4898,Campaign rally held in Constituency 16 centred on healthcare. Led by People's Front candidate CAND_0048.
+EVT_00225,3,17,25,External,External economic shock,economy,,0.8169,0.4681,6,Low-income,,Sudden economic disruption reaching Constituency 17 (the economy).
+EVT_00226,3,17,25,Candidate,Campaign rally,general,CAND_0051,0.4331,0.5040,5,High-income,0.0704,Campaign rally held in Constituency 17 centred on general local concerns. Led by People's Front candidate CAND_0051.
+EVT_00227,3,17,25,Candidate,Campaign rally,healthcare,CAND_0049,0.5418,0.7694,2,Middle-income,0.2455,Campaign rally held in Constituency 17 centred on healthcare. Led by Progressive Alliance candidate CAND_0049.
+EVT_00228,3,19,25,News,Healthcare issue,healthcare,,0.6788,0.9628,4,Low-income,,Healthcare issue reported in Constituency 19.
+EVT_00229,3,21,25,Candidate,Campaign rally,general,CAND_0063,0.1593,0.3814,1,General,0.1994,Well-attended rally in Constituency 21 addressing general local concerns. Led by People's Front candidate CAND_0063.
+EVT_00230,1,1,26,External,Other,healthcare,,0.7455,0.9537,2,Low-income,,Miscellaneous political development in Constituency 1 (healthcare).
+EVT_00231,1,2,26,Candidate,Policy announcement,agriculture,CAND_0005,0.4485,0.7030,2,Rural,-0.0524,Policy announcement for Constituency 2 concerning agriculture and farmers. Led by National Unity Party candidate CAND_0005.
+EVT_00232,1,2,26,News,Policy announcement,education,CAND_0004,0.5884,0.9265,5,Students,0.2126,New policy proposal on education announced in Constituency 2. Concerns Progressive Alliance candidate CAND_0004.
+EVT_00233,2,9,26,Candidate,Campaign rally,agriculture,CAND_0026,0.4478,0.3340,2,Rural,0.0700,Well-attended rally in Constituency 9 addressing agriculture and farmers. Led by National Unity Party candidate CAND_0026.
+EVT_00234,2,10,26,News,Controversy,general,,0.2420,0.5001,5,General,,Controversy reported in Constituency 10 touching on general local concerns.
+EVT_00235,2,10,26,Candidate,Policy announcement,agriculture,CAND_0029,0.7420,0.6619,5,Farmers,-0.0956,New policy proposal on agriculture and farmers announced in Constituency 10. Led by National Unity Party candidate CAND_0029.
+EVT_00236,3,15,26,Candidate,Manifesto announcement,employment,CAND_0045,0.7259,0.5986,4,Unemployed,0.2071,"Campaign promises released for Constituency 15, emphasising jobs and employment. Led by People's Front candidate CAND_0045."
+EVT_00237,3,18,26,Candidate,Policy announcement,education,CAND_0053,0.3024,0.7353,5,Students,-0.1078,Policy announcement for Constituency 18 concerning education. Led by National Unity Party candidate CAND_0053.
+EVT_00238,3,19,26,Candidate,Manifesto announcement,education,CAND_0055,0.6246,0.5841,5,Low-income,0.1177,"Campaign promises released for Constituency 19, emphasising education. Led by Progressive Alliance candidate CAND_0055."
+EVT_00239,3,21,26,News,Economic development,economy,CAND_0061,0.5028,0.5842,3,Urban,-0.2000,Economic development news in Constituency 21 relating to the economy. Concerns Progressive Alliance candidate CAND_0061.
+EVT_00240,1,1,27,Candidate,Manifesto announcement,agriculture,CAND_0001,0.7801,0.4782,4,General,0.2137,Manifesto announced in Constituency 1 with a focus on agriculture and farmers. Led by Progressive Alliance candidate CAND_0001.
+EVT_00241,1,3,27,Candidate,Other,general,CAND_0007,0.6396,0.8535,1,General,0.1694,Miscellaneous political development in Constituency 3 (general local concerns). Led by Progressive Alliance candidate CAND_0007.
+EVT_00242,1,5,27,Candidate,Education initiative,education,CAND_0014,0.1403,0.6187,4,Low-income,0.1519,Education initiative announced in Constituency 5. Led by National Unity Party candidate CAND_0014.
+EVT_00243,1,6,27,Candidate,Campaign rally,education,CAND_0018,0.5099,0.5487,1,Students,-0.1087,Well-attended rally in Constituency 6 addressing education. Led by People's Front candidate CAND_0018.
+EVT_00244,1,7,27,News,Policy announcement,education,,0.2807,0.3662,4,Low-income,,Policy announcement for Constituency 7 concerning education.
+EVT_00245,2,10,27,External,Agricultural issue,agriculture,,0.6813,0.7383,4,Farmers,,Farm-sector concern reported in Constituency 10.
+EVT_00246,2,11,27,Candidate,Campaign rally,education,CAND_0031,0.6048,0.5771,1,Students,0.0841,Well-attended rally in Constituency 11 addressing education. Led by Progressive Alliance candidate CAND_0031.
+EVT_00247,2,13,27,Candidate,Manifesto announcement,employment,CAND_0037,0.4348,0.3771,2,Low-income,0.2212,Manifesto announced in Constituency 13 with a focus on jobs and employment. Led by Progressive Alliance candidate CAND_0037.
+EVT_00248,2,14,27,News,Policy announcement,economy,CAND_0042,0.3667,0.3976,4,Low-income,0.0072,New policy proposal on the economy announced in Constituency 14. Concerns People's Front candidate CAND_0042.
+EVT_00249,3,17,27,Candidate,Manifesto announcement,agriculture,CAND_0049,0.5533,0.4949,4,Farmers,0.2431,"Campaign promises released for Constituency 17, emphasising agriculture and farmers. Led by Progressive Alliance candidate CAND_0049."
+EVT_00250,,,28,News,Agricultural issue,agriculture,,0.3938,0.6849,3,General,,Farm-sector concern reported in the state.
+EVT_00251,1,,28,News,Agricultural issue,agriculture,,0.2072,0.9314,3,Rural,,Agricultural issue raised in Region 1 affecting farmers.
+EVT_00252,3,,28,News,Education initiative,education,,0.7372,0.5549,2,Rural,,New schooling and education plan unveiled in Region 3.
+EVT_00253,2,8,28,Candidate,Manifesto announcement,economy,CAND_0024,0.4446,0.4347,3,Middle-income,0.1153,Manifesto announced in Constituency 8 with a focus on the economy. Led by People's Front candidate CAND_0024.
+EVT_00254,2,11,28,News,Economic development,economy,CAND_0032,0.3223,0.7045,2,Urban,0.3067,Economic development news in Constituency 11 relating to the economy. Concerns National Unity Party candidate CAND_0032.
+EVT_00255,2,12,28,News,Controversy,economy,,0.3610,0.5879,3,Urban,,Public row in Constituency 12 drew media attention (the economy).
+EVT_00256,3,16,28,Candidate,Campaign rally,general,CAND_0046,0.6901,0.1756,2,General,0.0903,Campaign rally held in Constituency 16 centred on general local concerns. Led by Progressive Alliance candidate CAND_0046.
+EVT_00257,3,16,28,News,Controversy,employment,CAND_0046,0.1642,0.4148,3,Unemployed,0.0191,Public row in Constituency 16 drew media attention (jobs and employment). Concerns Progressive Alliance candidate CAND_0046.
+EVT_00258,3,18,28,Candidate,Employment announcement,employment,CAND_0053,0.4491,0.4662,3,Students,0.2174,Job-creation announcement made in Constituency 18. Led by National Unity Party candidate CAND_0053.
+EVT_00259,3,19,28,Candidate,Policy announcement,agriculture,CAND_0055,0.5799,0.5334,2,Rural,0.2858,New policy proposal on agriculture and farmers announced in Constituency 19. Led by Progressive Alliance candidate CAND_0055.
+EVT_00260,1,2,29,Candidate,Other,general,CAND_0004,0.1834,0.5874,2,General,-0.0524,Minor political news in Constituency 2 (general local concerns). Led by Progressive Alliance candidate CAND_0004.
+EVT_00261,1,5,29,Candidate,Other,healthcare,CAND_0014,0.0355,0.3662,2,Rural,0.1159,Minor political news in Constituency 5 (healthcare). Led by National Unity Party candidate CAND_0014.
+EVT_00262,2,9,29,News,Other,employment,,0.1303,0.5215,2,General,,Miscellaneous political development in Constituency 9 (jobs and employment).
+EVT_00263,2,9,29,Candidate,Policy announcement,employment,CAND_0026,0.8255,0.6808,2,Students,-0.0676,Policy announcement for Constituency 9 concerning jobs and employment. Led by National Unity Party candidate CAND_0026.
+EVT_00264,3,18,29,News,Healthcare issue,healthcare,CAND_0052,0.2459,0.6907,2,Middle-income,-0.1506,Public health concern raised in Constituency 18. Concerns Progressive Alliance candidate CAND_0052.
+EVT_00265,3,21,29,Candidate,Policy announcement,employment,CAND_0062,0.1643,0.5488,2,Students,0.4148,Policy announcement for Constituency 21 concerning jobs and employment. Led by National Unity Party candidate CAND_0062.
+EVT_00266,3,,30,Candidate,Manifesto announcement,employment,CAND_0055,0.6860,0.5450,1,Unemployed,0.3977,"Campaign promises released for Region 3, emphasising jobs and employment. Led by Progressive Alliance candidate CAND_0055."
+EVT_00267,1,1,30,News,Policy announcement,economy,CAND_0001,0.6619,0.7538,1,High-income,-0.0223,New policy proposal on the economy announced in Constituency 1. Concerns Progressive Alliance candidate CAND_0001.
+EVT_00268,1,2,30,News,Policy announcement,agriculture,CAND_0005,0.4117,0.8092,1,Farmers,0.1805,New policy proposal on agriculture and farmers announced in Constituency 2. Concerns National Unity Party candidate CAND_0005.
+EVT_00269,1,2,30,Candidate,Other,healthcare,CAND_0006,0.1682,0.6487,1,Urban,-0.0058,Minor political news in Constituency 2 (healthcare). Led by People's Front candidate CAND_0006.
+EVT_00270,1,3,30,News,Controversy,general,,0.4300,0.6852,1,General,,Public row in Constituency 3 drew media attention (general local concerns).
+EVT_00271,1,6,30,Candidate,Controversy,general,CAND_0016,0.5445,0.4857,1,General,0.2202,Public row in Constituency 6 drew media attention (general local concerns). Led by Progressive Alliance candidate CAND_0016.
+EVT_00272,1,7,30,News,Controversy,general,CAND_0019,0.6275,0.7808,1,General,-0.5202,Public row in Constituency 7 drew media attention (general local concerns). Concerns Progressive Alliance candidate CAND_0019.
+EVT_00273,2,8,30,News,Economic development,agriculture,CAND_0023,0.7703,0.8792,1,Rural,-0.0352,Economic development news in Constituency 8 relating to agriculture and farmers. Concerns National Unity Party candidate CAND_0023.
+EVT_00274,2,8,30,Candidate,Policy announcement,agriculture,CAND_0023,0.6643,0.2819,1,Farmers,-0.0424,Policy announcement for Constituency 8 concerning agriculture and farmers. Led by National Unity Party candidate CAND_0023.
+EVT_00275,2,13,30,Candidate,Manifesto announcement,healthcare,CAND_0038,0.3308,0.6548,1,Low-income,-0.0291,Manifesto announced in Constituency 13 with a focus on healthcare. Led by National Unity Party candidate CAND_0038.
+EVT_00276,3,15,30,Candidate,Manifesto announcement,healthcare,CAND_0043,0.7260,0.4766,1,General,-0.3235,"Campaign promises released for Constituency 15, emphasising healthcare. Led by Progressive Alliance candidate CAND_0043."
+EVT_00277,3,18,30,Candidate,Manifesto announcement,education,CAND_0054,0.6821,0.3049,1,General,0.2182,"Campaign promises released for Constituency 18, emphasising education. Led by People's Front candidate CAND_0054."
+EVT_00278,3,20,30,News,Controversy,general,,0.5510,0.6688,1,General,,Public row in Constituency 20 drew media attention (general local concerns).
