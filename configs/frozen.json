@@ -1,0 +1,13 @@
+{
+  "constituency_id": 1,
+  "days": 30,
+  "lambda_social": 0.0,
+  "confidence_multiplier": 1.0,
+  "global_confidence": null,
+  "susceptibility_multiplier": 1.0,
+  "rho": 1.0,
+  "b_pop": 1.0,
+  "b_ideol": 1.0,
+  "tau": 1.0,
+  "vote_rule": "sample"
+}

@@ -1,0 +1,68 @@
+{
+  "synthetic": true,
+  "verification": "Default generator reproduction, not empirical validation",
+  "verified_at_utc": "2026-11-01T11:41:37.825733+00:00",
+  "command": [
+    "C:\\Users\\sahit\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "D:\\election-dynamics-simulator\\data\\dataset_generator.py",
+    "--seed",
+    "42",
+    "--output-dir",
+    "C:\\Users\\sahit\\AppData\\Local\\Packages\\sandbox.{5d7b4a1c-1953-40bb-b2c1-bf63ad42db7c}\\AC\\Temp\\election-data-verification-is9arcif"
+  ],
+  "config": {
+    "num_regions": 3,
+    "constituencies_per_region": 7,
+    "num_constituencies": null,
+    "voters_per_constituency": 3000,
+    "num_candidates_per_constituency": 3,
+    "num_political_parties": 3,
+    "incumbent_probability": 0.7,
+    "election_duration_days": 30,
+    "events_per_constituency": 12,
+    "events_per_region": 6,
+    "state_level_events": 8,
+    "avg_connections_per_voter": 8,
+    "avg_community_size": 150,
+    "cross_community_connection_probability": 0.08,
+    "cross_constituency_connection_probability": 0.01,
+    "influence_degree_exponent": 1.5,
+    "influence_power_max": 5.0,
+    "seed": 42,
+    "output_dir": "<temporary-directory>"
+  },
+  "seed": 42,
+  "generator_sha256": "e104997735c17556a2e85894fc8e25aaa45fd9c866549519d92c0c97fb4ea7a7",
+  "versions": {
+    "python": "3.12.10",
+    "numpy": "2.5.1",
+    "pandas": "3.0.5"
+  },
+  "files": {
+    "voters.csv": {
+      "supplied_sha256": "d5a6d848449853e95fcbaa41f127aa9f7d43eb3d43fe7c75510820e4ec6fcc0f",
+      "regenerated_sha256": "d5a6d848449853e95fcbaa41f127aa9f7d43eb3d43fe7c75510820e4ec6fcc0f",
+      "row_count": 63000,
+      "byte_identical": true
+    },
+    "social_network.csv": {
+      "supplied_sha256": "1a98f2cacbe38a12b613e540d660f2e8f613b4fa6999796778558f8f3bfe689f",
+      "regenerated_sha256": "1a98f2cacbe38a12b613e540d660f2e8f613b4fa6999796778558f8f3bfe689f",
+      "row_count": 506629,
+      "byte_identical": true
+    },
+    "candidates.csv": {
+      "supplied_sha256": "22d35af16113dee2d52a2c61377c1ea8cdd7523c3a07ef863f5dd47f1b3a4472",
+      "regenerated_sha256": "22d35af16113dee2d52a2c61377c1ea8cdd7523c3a07ef863f5dd47f1b3a4472",
+      "row_count": 63,
+      "byte_identical": true
+    },
+    "political_events.csv": {
+      "supplied_sha256": "909e46b1ee14b5ccb93a153bc8fd4a639ffe3598ade5f02c205d905897253496",
+      "regenerated_sha256": "909e46b1ee14b5ccb93a153bc8fd4a639ffe3598ade5f02c205d905897253496",
+      "row_count": 278,
+      "byte_identical": true
+    }
+  },
+  "all_byte_identical": true
+}

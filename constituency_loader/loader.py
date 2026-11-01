@@ -11,7 +11,7 @@ except ImportError:  # pragma: no cover - used by the example notebook
 
 
 def load_constituency(data_dir: str | Path, constituency_id: int = 1,
-                      validate: bool = True) -> dict[str, object]:
+                      validate: bool = True, election_duration_days: int = 30) -> dict[str, object]:
     """Load a constituency slice from a folder containing the four CSV files.
 
     Returns a dictionary with ``voters``, ``candidates``, ``social_network``,
@@ -28,7 +28,7 @@ def load_constituency(data_dir: str | Path, constituency_id: int = 1,
                          dtype={"region_id": "Int64", "constituency_id": "Int64"})
 
     if validate:
-        validate_data(voters, social_network, candidates, events)
+        validate_data(voters, social_network, candidates, events, election_duration_days)
 
     local_voters = voters.loc[voters.constituency_id == constituency_id].copy()
     if local_voters.empty:
@@ -45,7 +45,7 @@ def load_constituency(data_dir: str | Path, constituency_id: int = 1,
     local_edges = social_network.loc[local_edge_mask].copy()
     boundary_edges = social_network.loc[touches_local & ~local_edge_mask].copy()
 
-    event_region = events.region_id.eq(region_id)
+    event_region = events.region_id.eq(region_id) & events.constituency_id.isna()
     state_scope = events.region_id.isna() & events.constituency_id.isna()
     local_scope = events.constituency_id.eq(constituency_id)
     local_events = events.loc[local_scope | event_region | state_scope].copy()
