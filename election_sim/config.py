@@ -5,7 +5,9 @@ assumptions, not fitted estimates. Candidate ideology compresses five issue
 positions to their arithmetic mean. Popularity logits clamp at 1e-6 and
 1-1e-6; utility weights and softmax temperature default to 1.
 
-Social strength defaults to 0.2 and sender exponent to 1. Confidence is the
+Social strength defaults to 0.2 and sender exponent to 1. Campaign strength
+defaults to 0, so existing baseline configurations remain campaign-free.
+Confidence is the
 target's inclusive threshold; confidence/susceptibility multipliers clip to
 their allowed ranges. All social updates read the same snapshot. The frozen
 control uses social strength 0. Campaign and event effects are disabled.
@@ -37,6 +39,7 @@ class SimulationConfig:
     b_ideol: float = 1.0
     tau: float = 1.0
     vote_rule: str = "sample"
+    lambda_campaign: float = 0.0
 
     def __post_init__(self):
         for name in ("constituency_id", "days"):
@@ -44,12 +47,12 @@ class SimulationConfig:
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
         for name in ("lambda_social", "confidence_multiplier", "susceptibility_multiplier",
-                     "rho", "b_pop", "b_ideol", "tau"):
+                     "rho", "b_pop", "b_ideol", "tau", "lambda_campaign"):
             value = getattr(self, name)
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
-        if self.lambda_social > 1 or self.tau == 0:
-            raise ValueError("lambda_social must be <= 1 and tau must be > 0")
+        if self.lambda_social > 1 or self.lambda_campaign > 1 or self.tau == 0:
+            raise ValueError("lambda_social and lambda_campaign must be <= 1 and tau must be > 0")
         if self.global_confidence is not None:
             if not math.isfinite(self.global_confidence) or not 0 <= self.global_confidence <= 2:
                 raise ValueError("global_confidence must be in [0, 2]")

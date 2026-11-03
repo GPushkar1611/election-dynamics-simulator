@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from .config import SimulationConfig
+from .campaign.effects import apply_campaign_action, select_uniform_recipients
+from .campaign.models import CampaignAction
 from .dynamics import social_step
 from .network import build_incoming
 from .support import candidate_support
@@ -55,15 +57,16 @@ def _code_revision() -> dict:
     except (OSError, subprocess.CalledProcessError):
         revision, dirty = None, None
     # Include hashes because an uncommitted working tree is not identified by HEAD.
-    files = sorted((root / "election_sim").glob("*.py"))
+    files = sorted((root / "election_sim").rglob("*.py"))
     files += sorted((root / "constituency_loader").glob("*.py"))
     return {"revision": revision, "dirty": dirty,
             "source_sha256": {str(p.relative_to(root)).replace("\\", "/"):
                               hashlib.sha256(p.read_bytes()).hexdigest() for p in files}}
 
 
-def simulate(config: SimulationConfig, data: dict, seed: int = 42) -> RunResult:
-    """Run the no-campaign/no-event baseline without mutating supplied tables.
+def simulate(config: SimulationConfig, data: dict, seed: int = 42,
+             campaign_actions: list[CampaignAction] | None = None) -> RunResult:
+    """Run the social baseline with optional ordinary uniform campaigns.
 
     Uses canonical ID order so reordering CSV rows does not change the run.
     Scientific outputs reproduce; the manifest's creation timestamp may differ.
@@ -93,12 +96,32 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42) -> RunResult:
     susceptibility = np.clip(voters.susceptibility.to_numpy() * config.susceptibility_multiplier, 0, 1)
     confidence = (np.full(len(voters), config.global_confidence) if config.global_confidence is not None
                   else np.clip(voters.confidence_threshold.to_numpy() * config.confidence_multiplier, 0, 2))
-    names = ("targeting", "shocks", "turnout", "voting")
+    actions = campaign_actions or []
+    action_ids = [action.action_id for action in actions]
+    if len(action_ids) != len(set(action_ids)):
+        raise ValueError("campaign action_id values must be unique")
+    if any(action.candidate_id not in set(candidates.candidate_id) for action in actions):
+        raise ValueError("campaign actions must reference candidates in the selected constituency")
+    if any(action.start_day + action.duration - 1 > config.days for action in actions):
+        raise ValueError("campaign action extends beyond configured days")
+    names = ("campaign", "shocks", "turnout", "voting")
     children = np.random.SeedSequence(seed).spawn(len(names))
     child_seeds = {name: [int(v) for v in child.generate_state(4)]
                    for name, child in zip(names, children)}
     rng = {name: np.random.default_rng(value) for name, value in child_seeds.items()}
     candidate_ids = candidates.candidate_id.tolist()
+    candidate_positions = dict(zip(candidate_ids, candidates[[
+        "position_employment", "position_economy", "position_education",
+        "position_healthcare", "position_agriculture"]].mean(axis=1)))
+    recipients = {
+        action.action_id: select_uniform_recipients(len(voters), action.reach_fraction, rng["campaign"])
+        for action in actions
+    }
+    message_positions = {
+        action.action_id: (float(candidate_positions[action.candidate_id])
+                           if action.message_type == "ordinary" else float(action.message_position))
+        for action in actions
+    }
     summaries, support_rows, distributions, sampled_rows = [], [], [], []
     # A deterministic systematic ID sample for view state, not an electorate estimate.
     sample_indices = np.linspace(0, len(voters) - 1, min(100, len(voters)), dtype=int)
@@ -108,16 +131,25 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42) -> RunResult:
         previous = opinions.copy()
         if day:
             opinions, _ = social_step(opinions, susceptibility, confidence, graph, config.lambda_social)
+            for action in actions:
+                if action.active_on(day):
+                    opinions = apply_campaign_action(
+                        opinions, susceptibility, recipients[action.action_id],
+                        message_positions[action.action_id], action, config.lambda_campaign)
             support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol, config.tau)
         # Counts reflect the state logged for this day; the next update uses it.
         eligible = int((np.abs(opinions[graph.sources] - opinions[graph.targets]) <=
                         confidence[graph.targets]).sum())
         quantiles = np.quantile(opinions, [0.05, 0.25, 0.5, 0.75, 0.95])
+        active_actions = [action for action in actions if action.active_on(day)]
         summaries.append({"day": day, "opinion_mean": float(opinions.mean()),
                           "opinion_sd": float(opinions.std()),
                           "polarization_variance": float(opinions.var()),
                           **dict(zip(("q05", "q25", "q50", "q75", "q95"), map(float, quantiles))),
                           "eligible_edges": eligible,
+                          "active_campaign_actions": len(active_actions),
+                          "campaign_recipients_today": int(sum(len(recipients[action.action_id])
+                                                               for action in active_actions)),
                           "mean_absolute_daily_movement": float(np.abs(opinions - previous).mean()),
                           "mean_absolute_initial_movement": float(np.abs(opinions - initial).mean())})
         for candidate_id, value in zip(candidate_ids, support.mean(axis=0)):
@@ -141,11 +173,18 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42) -> RunResult:
     diagnostics = {**data.get("diagnostics", {}), "voter_count": len(voters),
                    "candidate_count": len(candidates), "internal_edge_count": len(edges),
                    "no_incoming_edges": int((np.diff(graph.offsets) == 0).sum()),
-                   "campaigns_applied": 0, "events_applied": 0,
+                   "campaign_actions_loaded": len(actions),
+                   "campaign_exposures": int(sum(len(recipients[action.action_id]) * action.duration
+                                                  for action in actions)),
+                   "campaigns_applied": int(sum(action.active_on(day)
+                                                  for action in actions for day in range(1, config.days + 1))),
+                   "events_applied": 0,
                    "loaded_events_not_applied": len(data.get("events", []))}
     metadata = {"synthetic": True, "claim": "Synthetic scenario; not an empirically validated forecast",
-                "scenario": "frozen" if config.lambda_social == 0 else "social_only",
+                "scenario": ("ordinary_campaign" if actions else
+                             ("frozen" if config.lambda_social == 0 else "social_only")),
                 "config": asdict(config), "master_seed": seed, "child_seeds": child_seeds,
+                "campaign_actions": [asdict(action) for action in actions],
                 "rng": "numpy.default_rng (PCG64); canonical voter/candidate ID order",
                 "view_sample": "Up to 100 systematically spaced canonical voter IDs; internal visualization only, not a representative sample",
                 "created_at_utc": datetime.now(timezone.utc).isoformat(),
