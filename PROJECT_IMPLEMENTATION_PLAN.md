@@ -54,7 +54,7 @@ See data/README.md and data/USAGE.md.
 | event intensity/credibility/duration/target_group | Signal strength, believability, active time, intended audience. |
 | candidate_effect | Synthetic signed signal for named candidate; not measured causal effect; blank means no candidate named. |
 
-There is no truth/misinformation label, campaign reach, voter choice, or official result in the CSVs. Add separate scenario actions in data/campaign_actions/ as JSON/CSV with action/candidate ID, start day, duration, signal type (policy, persuasion, misleading, fabricated), issue, target group/policy, intensity, reach fraction, message position/distortion, truth-status label, rationale. These are model controls, not observations. Don't mutate candidate_effect to manufacture factuality.
+There is no truth/misinformation label, campaign reach, voter choice, or official result in the CSVs. Add separate scenario actions in campaign_actions/ (repo root, outside data/) as JSON/CSV with action/candidate ID, start day, duration, signal type (policy, persuasion, misleading, fabricated), issue, target group/policy, intensity, reach fraction, message position/distortion, truth-status label, rationale. These are model controls, not observations. Don't mutate candidate_effect to manufacture factuality.
 
 For a real benchmark, create data/real_benchmark/ with official candidate results, registered electorate, ballots cast, turnout definition, date, source URL/retrieval date/terms, candidate mappings and cleaning script. Keep it separate. Never initialize agents from final results and then call the match a prediction.
 

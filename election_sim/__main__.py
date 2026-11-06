@@ -14,15 +14,16 @@ from .simulation import simulate
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Synthetic social simulation with optional ordinary campaigns; events disabled",
+        description="Synthetic social simulation with optional ordinary/smear campaigns; events disabled",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=("From the repository root, install pinned dependencies:\n"
                 "  python -m pip install -r requirements.txt\n\n"
                 "Run either control (choose a new output directory each time):\n"
                 "  python -m election_sim --config configs/baseline.json --seed 42 --output results/social_seed42\n"
                 "  python -m election_sim --config configs/frozen.json --seed 42 --output results/frozen_seed42\n\n"
-                "Run initial ordinary campaign:\n"
-                "  python -m election_sim --config configs/campaign.json --campaign-actions data/campaign_actions/ordinary_c01.json --seed 42 --output results/campaign_seed42\n\n"
+                "Run an ordinary or smear campaign:\n"
+                "  python -m election_sim --config configs/campaign.json --campaign-actions campaign_actions/ordinary_c01.json --seed 42 --output results/ordinary_seed42\n"
+                "  python -m election_sim --config configs/campaign.json --campaign-actions campaign_actions/smear_c01.json --seed 42 --output results/smear_seed42\n\n"
                 "Verify the baseline and loader:\n"
                 '  python -m unittest discover -s tests -p "test_*.py" -v\n'
                 '  python -m unittest discover -s constituency_loader -p "test_*.py" -v'))
@@ -30,7 +31,7 @@ def main():
     parser.add_argument("--data-dir", type=Path, default=Path("data/synthetic_election_dataset"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--campaign-actions", type=Path,
-                        help="JSON campaign actions; initial implementation supports ordinary uniform actions")
+                        help="JSON campaign actions (ordinary or smear; uniform targeting for now)")
     parser.add_argument("--output", type=Path, required=True, help="New run directory (must not exist)")
     args = parser.parse_args()
     try:

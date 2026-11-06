@@ -1,7 +1,7 @@
 {
   "actions": [
     {
-      "action_id": "c01_candidate_1_ordinary_days_10_15",
+      "action_id": "c01_candidate_1_days_10_15",
       "candidate_id": "CAND_0001",
       "start_day": 10,
       "duration": 6,

@@ -1,5 +1,5 @@
-"""Ordinary campaign actions for the synthetic election simulation."""
+"""Candidate campaign actions: ordinary (truthful) and smear (fabricated)."""
 
-from .models import CampaignAction, load_actions
+from .models import CampaignAction, check_actions, load_actions
 
-__all__ = ["CampaignAction", "load_actions"]
+__all__ = ["CampaignAction", "check_actions", "load_actions"]

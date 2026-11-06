@@ -10,7 +10,8 @@ defaults to 0, so existing baseline configurations remain campaign-free.
 Confidence is the
 target's inclusive threshold; confidence/susceptibility multipliers clip to
 their allowed ranges. All social updates read the same snapshot. The frozen
-control uses social strength 0. Campaign and event effects are disabled.
+control uses social strength 0. Campaigns (ordinary and smear) are
+optional; event effects are not yet applied.
 
 Baseline turnout uses the supplied propensity without mobilization. Voting
 samples final candidate support using a separate RNG. Canonical ID ordering
