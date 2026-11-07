@@ -121,21 +121,71 @@ def select_recipients(action: CampaignAction, voters: pd.DataFrame, edges: pd.Da
     return np.lexsort((tie_break, -scores))[:count].astype(int)
 
 
+def message_position(action: CampaignAction, platform: float, opinions: np.ndarray,
+                     recipients: np.ndarray) -> float:
+    """Where a message pulls recipients: the real platform for ordinary
+    messages; for misleading ones, the platform moved toward the audience's
+    mean opinion by `distortion` (0 = honest, 1 = tells them what they think)."""
+    if action.message_type != "misleading" or len(recipients) == 0:
+        return platform
+    return platform + action.distortion * (float(np.mean(opinions[recipients])) - platform)
+
+
 def apply_ordinary(opinions: np.ndarray, susceptibility: np.ndarray, recipients: np.ndarray,
-                   platform: float, action: CampaignAction, lambda_campaign: float) -> np.ndarray:
-    """x_i <- clip(x_i + a * s_i * lambda * (platform - x_i)) for recipients only."""
+                   position: float, action: CampaignAction, lambda_campaign: float) -> np.ndarray:
+    """x_i <- clip(x_i + a * s_i * lambda * (position - x_i)) for recipients only.
+
+    Used for ordinary and misleading messages; see message_position."""
     updated = np.asarray(opinions, dtype=float).copy()
-    movement = action.intensity * lambda_campaign * susceptibility[recipients] * (platform - updated[recipients])
+    movement = action.intensity * lambda_campaign * susceptibility[recipients] * (position - updated[recipients])
     updated[recipients] = np.clip(updated[recipients] + movement, -1, 1)
     return updated
 
 
+# Belief in a smear claim ("candidate c did something bad"), per voter and candidate.
+UNAWARE, BELIEVES, REJECTS = 0, 1, 2
+
+
 def apply_smear(penalty: np.ndarray, susceptibility: np.ndarray, recipients: np.ndarray,
                 target_index: int, action: CampaignAction, lambda_campaign: float) -> np.ndarray:
-    """Add a * s_i * lambda to recipients' utility penalty for the target candidate.
+    """Add a * s_i * lambda to recipients' smear strength for the target candidate.
 
-    The penalty accumulates over active days and persists to the election.
+    The strength accumulates over active days. It lowers the voter's utility
+    for that candidate for as long as the voter believes the claim.
     """
     updated = np.asarray(penalty, dtype=float).copy()
     updated[recipients, target_index] += action.intensity * lambda_campaign * susceptibility[recipients]
     return updated
+
+
+def spread_smears(belief: np.ndarray, strength: np.ndarray, sources: np.ndarray,
+                  targets: np.ndarray, edge_weights: np.ndarray, susceptibility: np.ndarray,
+                  probability: float, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+    """One day of smear rumours spreading along social ties.
+
+    belief and strength are voters x candidates arrays (one smear claim per
+    candidate). Every believer tells each person it influences (source ->
+    target tie) with probability `probability * edge_weight`. A listener who
+    had not heard the claim believes it with probability equal to their
+    susceptibility, otherwise rejects it for good. A new believer takes the
+    teller's strength scaled by the tie weight (the strongest teller if
+    several), so rumours weaken as they travel. Everyone reacts to the
+    same start-of-step snapshot. Returns updated copies.
+    """
+    new_belief, new_strength = belief.copy(), strength.copy()
+    for candidate in range(belief.shape[1]):
+        believers = belief[:, candidate] == BELIEVES
+        if not believers.any():
+            continue
+        tells = believers[sources] & (rng.random(len(sources)) < probability * edge_weights)
+        heard_strength = np.zeros(len(belief))
+        np.maximum.at(heard_strength, targets[tells],
+                      edge_weights[tells] * strength[sources[tells], candidate])
+        heard = np.zeros(len(belief), dtype=bool)
+        heard[targets[tells]] = True
+        listeners = np.flatnonzero(heard & (belief[:, candidate] == UNAWARE))
+        convinced = rng.random(len(listeners)) < susceptibility[listeners]
+        new_belief[listeners[convinced], candidate] = BELIEVES
+        new_belief[listeners[~convinced], candidate] = REJECTS
+        new_strength[listeners[convinced], candidate] = heard_strength[listeners[convinced]]
+    return new_belief, new_strength

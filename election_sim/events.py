@@ -166,6 +166,8 @@ def prepare_events(events: pd.DataFrame, voters: pd.DataFrame, candidate_ids: li
                          "audience": audience, "weights": weights, "candidate_id": candidate_id,
                          "associated_candidate_id": associated_candidate_id,
                          "source_type": row.get("source_type"),
+                         "event_type": (str(row["event_type"]) if _present(row.get("event_type"))
+                                        else None),
                          "candidate_effect": effect, "direction": direction,
                          "shock_mode": shock_mode,
                          "memory_half_life_days": memory_half_life,

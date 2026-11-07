@@ -1,7 +1,9 @@
 # Campaign actions
 
-Scenario files for candidate campaigns in constituency 1. These are model
-controls, not observations. Each file is `{"actions": [ ... ]}`.
+Scripted scenario files for candidate campaigns in constituency 1: every
+action is fixed in advance. These are model controls, not observations. Each
+file is `{"actions": [ ... ]}`. For candidates that choose their own actions
+during the run from polls, see `campaign_agents/README.md`.
 
 | File | What it does |
 |---|---|
@@ -23,7 +25,8 @@ controls, not observations. Each file is `{"actions": [ ... ]}`.
 | `start_day`, `duration` | Active on days `start_day` .. `start_day + duration - 1` |
 | `intensity` | Signal strength in [0, 1] |
 | `reach_fraction` | Share of constituency voters reached, in [0, 1] |
-| `message_type` | Action effect: `ordinary` (platform persuasion) or `smear` (fabricated attack in the current example) |
+| `message_type` | Action effect: `ordinary` (platform persuasion), `misleading` (distorted platform) or `smear` (fabricated attack) |
+| `distortion` | Misleading only, in [0, 1]: how far the claimed platform moves toward the audience (default 0) |
 | `target_policy` | `uniform`, `group`, `high_susceptibility`, `high_influence`, or `community` |
 | `target_group` | Required for `group`; one of the supported audience labels below |
 | `community_id` | Optional for `community`; omit to select a seeded eligible community |
@@ -40,14 +43,28 @@ rejected.
 - **ordinary**: each active day, recipient opinions move toward the sponsor's
   real platform (mean of its five `position_*` values):
   `x_i += intensity * s_i * lambda_campaign * (platform - x_i)`.
-- **smear**: a fabricated negative claim. Opinions do not move. Each active day,
-  recipients' utility for the target candidate drops by
-  `intensity * s_i * lambda_campaign`. The penalty accumulates and lasts until
-  the election. This is the current scenario's truth assumption; the model does
-  not fact-check claims or represent truthful opposition research separately.
-  Because this penalty does not change opinion or diffuse through the social
-  graph, high-influence targeting of a smear currently affects only the reached
-  voters' support. It does not model gossip or claim retransmission.
+- **misleading**: like ordinary, but the message misrepresents the platform.
+  It claims a position moved toward the audience's own mean opinion:
+  `q = platform + distortion * (audience_mean - platform)`, then
+  `x_i += intensity * s_i * lambda_campaign * (q - x_i)`. `distortion = 0` is
+  exactly an ordinary message.
+- **smear**: a fabricated negative claim ("candidate X did something bad").
+  Opinions do not move. Recipients come to **believe** the claim, and each
+  active day their smear strength for the target candidate grows by
+  `intensity * s_i * lambda_campaign`. While a voter believes the claim, that
+  strength is subtracted from their utility for the target. It lasts until the
+  election. The model does not fact-check claims.
+- **Smear spreading (word of mouth)**: off by default. With
+  `smear_spread_probability = p > 0` in the config, every believer passes the
+  claim along each of their outgoing ties each day with probability
+  `p * edge_weight`. A voter who had not heard it believes it with probability
+  equal to their susceptibility; otherwise they reject it for good. A new
+  believer gets the teller's strength times the tie weight, so rumours weaken
+  as they travel. This makes high-influence targeting of smears matter. Each
+  voter's state per claim (0 unaware, 1 believes, 2 rejects) is in
+  `final_state.csv` (`smear_belief_<candidate>`), the daily
+  `smear_believers` count is in `daily_summary.csv`, and the full daily state
+  is in `history.npz` (`smear_belief`).
 
 ## Recipients
 

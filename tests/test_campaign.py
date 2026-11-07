@@ -14,8 +14,9 @@ import pandas as pd
 
 from election_sim import SimulationConfig, simulate
 from election_sim.campaign import CampaignAction, load_actions
-from election_sim.campaign.effects import (apply_ordinary, apply_smear, assign_communities,
-                                          select_recipients)
+from election_sim.campaign.effects import (BELIEVES, REJECTS, UNAWARE, apply_ordinary, apply_smear,
+                                          assign_communities, message_position, select_recipients,
+                                          spread_smears)
 from test_baseline import fixture
 
 
@@ -51,7 +52,14 @@ class ActionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "omit target_candidate_id"):
             CampaignAction("a", "left", 1, 1, 0.5, 0.5, target_candidate_id="right")
         with self.assertRaisesRegex(ValueError, "message_type"):
-            CampaignAction("a", "left", 1, 1, 0.5, 0.5, message_type="misleading")
+            CampaignAction("a", "left", 1, 1, 0.5, 0.5, message_type="rumour")
+        with self.assertRaisesRegex(ValueError, "distortion is only valid"):
+            CampaignAction("a", "left", 1, 1, 0.5, 0.5, distortion=0.5)
+        with self.assertRaisesRegex(ValueError, "distortion must be in"):
+            CampaignAction("a", "left", 1, 1, 0.5, 0.5, message_type="misleading", distortion=2)
+        with self.assertRaisesRegex(ValueError, "omit target_candidate_id"):
+            CampaignAction("a", "left", 1, 1, 0.5, 0.5, message_type="misleading",
+                           target_candidate_id="right")
         with self.assertRaisesRegex(ValueError, "target_policy"):
             CampaignAction("a", "left", 1, 1, 0.5, 0.5, target_policy="bogus")
         with self.assertRaisesRegex(ValueError, "target_group"):
@@ -197,10 +205,58 @@ class EffectTests(unittest.TestCase):
                                   np.array([1]), -1.0, action, 1.0)
         np.testing.assert_allclose(opinions, [0.0, -0.25])
 
+    def test_misleading_position_moves_platform_toward_audience(self):
+        action = CampaignAction("a", "left", 1, 1, 1.0, 0.5, message_type="misleading", distortion=0.5)
+        opinions = np.array([1.0, 0.6, -1.0])
+        # Audience = voters 0 and 1 (mean 0.8); platform -1 moves halfway to 0.8.
+        self.assertAlmostEqual(message_position(action, -1.0, opinions, np.array([0, 1])), -0.1)
+        honest = CampaignAction("b", "left", 1, 1, 1.0, 0.5, message_type="misleading", distortion=0.0)
+        self.assertEqual(message_position(honest, -1.0, opinions, np.array([0, 1])), -1.0)
+        ordinary = CampaignAction("c", "left", 1, 1, 1.0, 0.5)
+        self.assertEqual(message_position(ordinary, -1.0, opinions, np.array([0, 1])), -1.0)
+
     def test_smear_penalises_only_recipients_and_target(self):
         action = CampaignAction("a", "left", 1, 1, 1.0, 0.5, message_type="smear", target_candidate_id="right")
         penalty = apply_smear(np.zeros((2, 2)), np.array([1.0, 0.5]), np.array([1]), 1, action, 0.4)
         np.testing.assert_allclose(penalty, [[0.0, 0.0], [0.0, 0.2]])
+
+
+class SmearSpreadTests(unittest.TestCase):
+    """a -> b -> c chain; candidate column 0."""
+    sources, targets = np.array([0, 1]), np.array([1, 2])
+
+    def spread(self, belief, strength, weights=(1.0, 1.0), susceptibility=(1.0, 1.0, 1.0), p=1.0):
+        return spread_smears(np.array(belief, dtype=np.int8).reshape(3, 1),
+                             np.array(strength, dtype=float).reshape(3, 1), self.sources, self.targets,
+                             np.array(weights), np.array(susceptibility), p, np.random.default_rng(0))
+
+    def test_rumour_moves_one_tie_per_step(self):
+        belief, strength = self.spread([BELIEVES, UNAWARE, UNAWARE], [0.4, 0, 0])
+        np.testing.assert_array_equal(belief[:, 0], [BELIEVES, BELIEVES, UNAWARE])  # synchronous
+        np.testing.assert_allclose(strength[:, 0], [0.4, 0.4, 0.0])
+
+    def test_rumour_weakens_with_tie_weight(self):
+        belief, strength = np.array([BELIEVES, UNAWARE, UNAWARE]), np.array([0.4, 0, 0])
+        rng = np.random.default_rng(0)
+        for _ in range(30):  # a weight-0.5 tie passes it on half the time
+            belief, strength = spread_smears(belief.reshape(3, 1), strength.reshape(3, 1),
+                                             self.sources, self.targets, np.array([0.5, 1.0]),
+                                             np.ones(3), 1.0, rng)
+            belief, strength = belief[:, 0], strength[:, 0]
+        np.testing.assert_array_equal(belief, [BELIEVES, BELIEVES, BELIEVES])
+        np.testing.assert_allclose(strength, [0.4, 0.2, 0.2])  # 0.4 x 0.5, then x 1.0
+
+    def test_unsusceptible_listener_rejects_for_good(self):
+        belief, _ = self.spread([BELIEVES, UNAWARE, UNAWARE], [0.4, 0, 0], susceptibility=(1, 0, 1))
+        self.assertEqual(belief[1, 0], REJECTS)
+        again, _ = self.spread(belief[:, 0], [0.4, 0, 0])
+        self.assertEqual(again[1, 0], REJECTS)  # a rejecter neither re-believes nor passes it on
+        self.assertEqual(again[2, 0], UNAWARE)
+
+    def test_zero_probability_spreads_nothing(self):
+        belief, strength = self.spread([BELIEVES, UNAWARE, UNAWARE], [0.4, 0, 0], p=0.0)
+        np.testing.assert_array_equal(belief[:, 0], [BELIEVES, UNAWARE, UNAWARE])
+        np.testing.assert_array_equal(strength[:, 0], [0.4, 0, 0])
 
 
 class SimulationTests(unittest.TestCase):
@@ -256,6 +312,36 @@ class SimulationTests(unittest.TestCase):
         np.testing.assert_array_equal(control.final_state.final_opinion, result.final_state.final_opinion)
         self.assertTrue((support(result, "right") < support(control, "right")).all())
         self.assertEqual(result.metadata["scenario"], "smear_campaign")
+
+    def test_misleading_with_zero_distortion_equals_ordinary(self):
+        ordinary = run([CampaignAction("a", "left", 1, 1, 1.0, 0.67)])
+        misleading = run([CampaignAction("a", "left", 1, 1, 1.0, 0.67,
+                                         message_type="misleading", distortion=0.0)])
+        np.testing.assert_array_equal(ordinary.final_state.final_opinion,
+                                      misleading.final_state.final_opinion)
+        self.assertEqual(misleading.metadata["scenario"], "misleading_campaign")
+
+    def test_misleading_pulls_less_far_than_the_true_platform(self):
+        # Everyone reached; audience mean is 0, so a distorted "left" message claims -0.5.
+        ordinary = run([CampaignAction("a", "left", 1, 1, 1.0, 1.0)])
+        misleading = run([CampaignAction("a", "left", 1, 1, 1.0, 1.0,
+                                         message_type="misleading", distortion=0.5)])
+        np.testing.assert_allclose(ordinary.final_state.final_opinion, [-1.0, -1.0, -1.0])
+        np.testing.assert_allclose(misleading.final_state.final_opinion, [-0.5, -0.5, -0.5])
+
+    def test_smear_spreads_only_when_enabled(self):
+        # High influence picks voter b, who influences c (a -> b -> c).
+        smear = CampaignAction("a", "left", 1, 1, 1.0, 0.34, message_type="smear",
+                               target_candidate_id="right", target_policy="high_influence")
+        quiet = simulate(SimulationConfig(days=3, lambda_social=0, lambda_campaign=1),
+                         fixture(), 42, [smear])
+        loud = simulate(SimulationConfig(days=3, lambda_social=0, lambda_campaign=1,
+                                         smear_spread_probability=1.0), fixture(), 42, [smear])
+        self.assertEqual(quiet.diagnostics["smear_believers"]["right"], 1)
+        spread = loud.diagnostics["smear_believers"]["right"] + loud.diagnostics["smear_rejecters"]["right"]
+        self.assertGreater(spread, 1)
+        believers = loud.daily_summary.smear_believers.to_numpy()
+        self.assertTrue((np.diff(believers) >= 0).all())  # nobody forgets in this model
 
     def test_actions_without_campaign_strength_are_an_error(self):
         with self.assertRaisesRegex(ValueError, "lambda_campaign is 0"):

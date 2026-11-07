@@ -16,7 +16,7 @@ class PairedEventResult:
 
 
 def compare_event_shock(config, data: dict, seed: int = 42,
-                        campaign_actions=None) -> PairedEventResult:
+                        campaign_actions=None, agents=None) -> PairedEventResult:
     """Run matched no-event and event scenarios with common random streams.
 
     The only changed parameter is ``lambda_event``. Social, campaign, turnout,
@@ -26,8 +26,8 @@ def compare_event_shock(config, data: dict, seed: int = 42,
     """
     if config.lambda_event <= 0:
         raise ValueError("the shock run requires lambda_event > 0")
-    no_shock = simulate(replace(config, lambda_event=0.0), data, seed, campaign_actions)
-    with_shock = simulate(config, data, seed, campaign_actions)
+    no_shock = simulate(replace(config, lambda_event=0.0), data, seed, campaign_actions, agents=agents)
+    with_shock = simulate(config, data, seed, campaign_actions, agents=agents)
     day = config.days
     control_support = no_shock.daily_support.query("day == @day").set_index("candidate_id").mean_support
     shock_support = with_shock.daily_support.query("day == @day").set_index("candidate_id").mean_support

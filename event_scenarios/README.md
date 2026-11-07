@@ -22,6 +22,8 @@ python -m election_sim --config configs/baseline.json `
   --output results/c01_moderate_events_seed42
 ```
 
+Add `--overwrite` to run again into the same folder.
+
 All parameters are synthetic scenario choices. In particular, the opinion
 axis has no empirically established interpretation as a specific ideology;
 the directional sign is supplied explicitly rather than inferred from event

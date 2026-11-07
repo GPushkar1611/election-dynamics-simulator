@@ -11,8 +11,11 @@ to a 7-day half-life after its scheduled active duration; reminders default off.
 Confidence is the
 target's inclusive threshold; confidence/susceptibility multipliers clip to
 their allowed ranges. All social updates read the same snapshot. The frozen
-control disables social and event effects. Campaigns (ordinary and smear) are
-optional.
+control disables social and event effects. Campaigns (ordinary, misleading
+and smear) are optional: scripted from JSON, or chosen during the run by
+candidate agents that read polls of `poll_sample_size` voters with
+`poll_noise`. Smear rumours spread along social ties only when
+`smear_spread_probability` > 0 (default 0: only direct recipients believe).
 
 Baseline turnout uses the supplied propensity without mobilization. Voting
 samples final candidate support using a separate RNG. Canonical ID ordering
@@ -20,11 +23,7 @@ defines random-draw assignment and argmax tie breaking. Election ties list
 all tied winners. Zero turnout has no winner and zero vote shares.
 
 Polarization means population opinion variance. These are synthetic scenarios,
-not empirical validation. Ordinary/smear actions and uniform, group,
-susceptibility, influence, and inferred-community recipient policies are
-implemented. Scheduled event effects and a paired shock/no-shock comparison
-are available; event generation, multi-seed workflows, uncertainty analysis,
-and UI work remain.
+not empirical validation.
 """
 
 from dataclasses import dataclass
@@ -49,23 +48,27 @@ class SimulationConfig:
     event_memory_half_life_days: float = 7.0
     event_reminder_probability: float = 0.0
     event_reminder_strength: float = 0.25
+    smear_spread_probability: float = 0.0
+    poll_sample_size: int = 300
+    poll_noise: float = 0.02
 
     def __post_init__(self):
-        for name in ("constituency_id", "days"):
+        for name in ("constituency_id", "days", "poll_sample_size"):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
         for name in ("lambda_social", "confidence_multiplier", "susceptibility_multiplier",
                      "rho", "b_pop", "b_ideol", "tau", "lambda_campaign", "lambda_event",
                      "event_memory_half_life_days", "event_reminder_probability",
-                     "event_reminder_strength"):
+                     "event_reminder_strength", "smear_spread_probability", "poll_noise"):
             value = getattr(self, name)
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
         if self.lambda_social > 1 or self.lambda_campaign > 1 or self.lambda_event > 1 or self.tau == 0:
             raise ValueError("lambda_social, lambda_campaign and lambda_event must be <= 1 and tau must be > 0")
-        if self.event_reminder_probability > 1 or self.event_reminder_strength > 1:
-            raise ValueError("event reminder probability and strength must be <= 1")
+        if (self.event_reminder_probability > 1 or self.event_reminder_strength > 1
+                or self.smear_spread_probability > 1):
+            raise ValueError("event reminder probability/strength and smear_spread_probability must be <= 1")
         if self.global_confidence is not None:
             if not math.isfinite(self.global_confidence) or not 0 <= self.global_confidence <= 2:
                 raise ValueError("global_confidence must be in [0, 2]")

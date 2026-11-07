@@ -63,10 +63,58 @@ From the project folder, with the dependencies installed:
 python -m election_sim --config configs/baseline.json --seed 42 --output results/my_baseline_run
 ```
 
-Use a new output folder for each run. Run `python -m election_sim --help` for the frozen-control and test commands.
+Use a new output folder for each run, or add `--overwrite` to replace a previous run's folder. Run `python -m election_sim --help` for the frozen-control and test commands.
+
+## Full per-day history (for animations)
+
+By default a run saves only 100 sampled voters per day (`sampled_state.csv`). To record **every** voter on **every** day, add `--record-history`:
+
+```powershell
+python -m election_sim --config configs/campaign.json --campaign-actions campaign_actions/smear_c01.json --seed 42 --record-history --output results/smear_history_seed42
+```
+
+This adds two files to the run folder. A full C01 run is about 1 MB.
+
+- `history.npz`: NumPy arrays. Day 0 is the initial state.
+
+  | Array | Shape | Meaning |
+  |---|---|---|
+  | `voter_ids` | `[voter]` | Voter IDs in canonical (sorted) order; indexes every voter axis |
+  | `candidate_ids` | `[candidate]` | Candidate IDs in sorted order |
+  | `action_ids` | `[action]` | Campaign action IDs in the order they are applied |
+  | `opinions` | `[day, voter]` | Opinion in [-1, 1] at the end of each day |
+  | `support` | `[day, voter, candidate]` | Support probabilities (rows sum to 1) |
+  | `smear_belief` | `[day, voter, candidate]` | Belief in a smear about that candidate: 0 unaware, 1 believes, 2 rejects |
+  | `campaign_exposed` | `[day, voter, action]` | True if that action reached the voter that day |
+  | `event_exposed` | `[day, voter]` | True if any active event reached the voter that day (always False when `lambda_event` is 0) |
+
+- `history_timeline.json`: a list of `{day, end_day, kind, id, label, candidate_id}` entries for campaigns (`campaign_ordinary`, `campaign_misleading`, `campaign_smear`, including agent actions), events (`event`), reminders (`event_reminder`) and withdrawals (`event_candidate_withdrawal`), sorted by day. Use it to label plots and videos.
+
+In Python:
+
+```python
+from election_sim import simulate, load_history
+
+result = simulate(config, data, seed=42, campaign_actions=actions, record_history=True)
+result.history["opinions"]        # numpy array [31, 3000]
+
+history = load_history("results/smear_history_seed42")   # same dict, read from a saved run
+```
+
+Recording only copies values. Results are identical with or without it, and this is tested in `tests/test_history.py`.
+
+## Candidate agents (Step 2)
+
+Candidates can also be agents that read a poll every few days and choose their own campaign (`greedy`, `go_negative` or `rebut`) within a budget. Run:
+
+```powershell
+python -m election_sim --config configs/agents.json --agents campaign_agents/c01_agents.json --seed 42 --output results/agents_seed42
+```
+
+The command prints every agent decision. See `campaign_agents/README.md`. Step 2 also added the `misleading` message type and optional smear spreading through the social network (`smear_spread_probability`); see `campaign_actions/README.md`. With no agents and spreading off, results are identical to earlier versions.
 
 ## What remains
 
-The voter/social-network baseline, ordinary/smear campaign mechanics, and uniform, group, high-susceptibility, high-influence, and seeded graph-community recipient policies are implemented. Scheduled event rows are applied on their active days: group, issue importance, and event sensitivity filter exposure; candidate-associated events adjust that candidate's utility, while candidate-free events support balanced or explicitly directional opinion shocks. Effects are apportioned over duration and can decay, receive reminders, depend on an earlier event, or trigger candidate withdrawal. A 13-event C01 example schedule demonstrates these options without changing the 278-row generated dataset. The paired shock/no-shock helper holds random streams constant. These are synthetic mechanisms, not fitted behavioral parameters. Multi-seed experiment workflows, mappings from shock direction to named political responses, issue-aware candidate support, uncertainty analysis, and the dashboard/report remain unfinished. Community labels are inferred from the network; they are not present in voter records. The original plan also calls for model/data-profile documentation and clean-environment reproduction.
+The voter/social-network baseline, ordinary/smear campaign mechanics, and uniform, group, high-susceptibility, high-influence, and seeded graph-community recipient policies are implemented. Scheduled event rows are applied on their active days: group, issue importance, and event sensitivity filter exposure; candidate-associated events adjust that candidate's utility, while candidate-free events support balanced or explicitly directional opinion shocks. Effects are apportioned over duration and can decay, receive reminders, depend on an earlier event, or trigger candidate withdrawal. A 13-event C01 example schedule demonstrates these options without changing the 278-row generated dataset. The paired shock/no-shock helper holds random streams constant. These are synthetic mechanisms, not fitted behavioral parameters. Full per-day voter history can be recorded with `--record-history` (see above). Candidate agents, misleading messages and smear spreading are implemented (see above). Multi-seed experiment workflows, mappings from shock direction to named political responses, issue-aware candidate support, uncertainty analysis, and the dashboard/report remain unfinished. Community labels are inferred from the network; they are not present in voter records. The original plan also calls for model/data-profile documentation and clean-environment reproduction.
 
 The supplied CSV files remain synthetic and are not a validated prediction of a real election.

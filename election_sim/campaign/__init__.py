@@ -1,4 +1,4 @@
-"""Candidate campaign actions: ordinary (truthful) and smear (fabricated)."""
+"""Candidate campaign actions: ordinary (truthful), misleading, and smear (fabricated)."""
 
 from .models import CampaignAction, check_actions, load_actions
 

@@ -1,12 +1,15 @@
 """Campaign action schema and JSON loading (plan sections 2.3 and 3.3).
 
-Two message types are supported, and the type is the action's explicit
+Three message types are supported, and the type is the action's explicit
 truth label:
 
 - ordinary: a truthful message that pulls recipients' opinions toward the
   sponsoring candidate's real platform.
+- misleading: like ordinary, but the platform is misrepresented: the message
+  claims a position moved toward the audience's own opinions by `distortion`.
 - smear: a fabricated negative claim about another candidate. It does not
-  move opinions; it lowers recipients' utility for the target candidate.
+  move opinions; recipients come to believe it, which lowers their utility
+  for the target candidate. Believers can pass it on (see effects.py).
 
 ``target_policy`` decides who receives an action: uniform, a mapped attribute
 group, high susceptibility, high network influence, or a seeded community
@@ -18,7 +21,7 @@ import json
 import math
 from pathlib import Path
 
-MESSAGE_TYPES = {"ordinary", "smear"}
+MESSAGE_TYPES = {"ordinary", "misleading", "smear"}
 TARGET_POLICIES = {"uniform", "group", "high_susceptibility", "high_influence", "community"}
 TARGET_GROUPS = {
     "General", "Rural", "Urban", "Students", "Farmers", "Unemployed",
@@ -39,6 +42,7 @@ class CampaignAction:
     target_candidate_id: str | None = None
     target_group: str | None = None
     community_id: int | None = None
+    distortion: float = 0.0  # misleading only: 0 = honest platform, 1 = audience's own view
 
     def __post_init__(self) -> None:
         if not isinstance(self.action_id, str) or not self.action_id.strip():
@@ -49,7 +53,7 @@ class CampaignAction:
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"campaign {name} must be a positive integer")
-        for name in ("intensity", "reach_fraction"):
+        for name in ("intensity", "reach_fraction", "distortion"):
             value = getattr(self, name)
             if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
                 raise ValueError(f"campaign {name} must be finite")
@@ -68,8 +72,10 @@ class CampaignAction:
             if (self.target_policy != "community" or isinstance(self.community_id, bool)
                     or not isinstance(self.community_id, int) or self.community_id < 0):
                 raise ValueError("community_id must be a nonnegative integer used with target_policy='community'")
-        if self.message_type == "ordinary" and self.target_candidate_id is not None:
-            raise ValueError("ordinary campaigns promote their own candidate; omit target_candidate_id")
+        if self.message_type != "smear" and self.target_candidate_id is not None:
+            raise ValueError(f"{self.message_type} campaigns promote their own candidate; omit target_candidate_id")
+        if self.message_type != "misleading" and self.distortion != 0:
+            raise ValueError("distortion is only valid with message_type='misleading'")
         if self.message_type == "smear":
             if not isinstance(self.target_candidate_id, str) or not self.target_candidate_id.strip():
                 raise ValueError("smear campaigns require target_candidate_id")
