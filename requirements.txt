@@ -1,2 +1,2 @@
-numpy==2.5.1
+numpy==2.4.6
 pandas==3.0.5

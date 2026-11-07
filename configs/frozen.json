@@ -2,6 +2,7 @@
   "constituency_id": 1,
   "days": 30,
   "lambda_social": 0.0,
+  "lambda_event": 0.0,
   "confidence_multiplier": 1.0,
   "global_confidence": null,
   "susceptibility_multiplier": 1.0,

@@ -1,0 +1,14 @@
+{
+  "actions": [
+    {
+      "action_id": "c01_candidate_1_days_10_15",
+      "candidate_id": "CAND_0001",
+      "start_day": 10,
+      "duration": 6,
+      "intensity": 0.5,
+      "reach_fraction": 0.05,
+      "message_type": "ordinary",
+      "target_policy": "uniform"
+    }
+  ]
+}

@@ -205,7 +205,7 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(frozen.turnout["turnout"], social.turnout["turnout"])
         self.assertEqual(frozen.metadata["child_seeds"], social.metadata["child_seeds"])
         streams = frozen.metadata["child_seeds"].values()
-        self.assertEqual(len({tuple(value) for value in streams}), 4)
+        self.assertEqual(len({tuple(value) for value in streams}), 5)
 
     def test_save_manifest_and_refuse_overwrite(self):
         result = simulate(SimulationConfig(days=1), fixture(), 42)

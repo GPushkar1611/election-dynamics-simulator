@@ -8,8 +8,9 @@ truth label:
 - smear: a fabricated negative claim about another candidate. It does not
   move opinions; it lowers recipients' utility for the target candidate.
 
-``target_policy`` decides who receives an action. Only "uniform" exists
-today; new policies are added in ``effects.select_recipients``.
+``target_policy`` decides who receives an action: uniform, a mapped attribute
+group, high susceptibility, high network influence, or a seeded community
+detected from the social graph.
 """
 
 from dataclasses import dataclass
@@ -18,7 +19,11 @@ import math
 from pathlib import Path
 
 MESSAGE_TYPES = {"ordinary", "smear"}
-TARGET_POLICIES = {"uniform"}
+TARGET_POLICIES = {"uniform", "group", "high_susceptibility", "high_influence", "community"}
+TARGET_GROUPS = {
+    "General", "Rural", "Urban", "Students", "Farmers", "Unemployed",
+    "Low-income", "Middle-income", "High-income",
+}
 
 
 @dataclass(frozen=True)
@@ -32,6 +37,8 @@ class CampaignAction:
     message_type: str = "ordinary"
     target_policy: str = "uniform"
     target_candidate_id: str | None = None
+    target_group: str | None = None
+    community_id: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.action_id, str) or not self.action_id.strip():
@@ -52,6 +59,15 @@ class CampaignAction:
             raise ValueError(f"campaign message_type must be one of {sorted(MESSAGE_TYPES)}")
         if self.target_policy not in TARGET_POLICIES:
             raise ValueError(f"campaign target_policy must be one of {sorted(TARGET_POLICIES)}")
+        if self.target_policy == "group":
+            if self.target_group not in TARGET_GROUPS:
+                raise ValueError(f"group targeting requires target_group from {sorted(TARGET_GROUPS)}")
+        elif self.target_group is not None:
+            raise ValueError("target_group is only valid with target_policy='group'")
+        if self.community_id is not None:
+            if (self.target_policy != "community" or isinstance(self.community_id, bool)
+                    or not isinstance(self.community_id, int) or self.community_id < 0):
+                raise ValueError("community_id must be a nonnegative integer used with target_policy='community'")
         if self.message_type == "ordinary" and self.target_candidate_id is not None:
             raise ValueError("ordinary campaigns promote their own candidate; omit target_candidate_id")
         if self.message_type == "smear":

@@ -9,7 +9,8 @@ ISSUES = ("employment", "economy", "education", "healthcare", "agriculture")
 
 def candidate_support(opinions: np.ndarray, candidates: pd.DataFrame,
                       b_pop: float = 1.0, b_ideol: float = 1.0,
-                      tau: float = 1.0, penalty: np.ndarray | None = None) -> np.ndarray:
+                      tau: float = 1.0, penalty: np.ndarray | None = None,
+                      utility_adjustment: np.ndarray | None = None) -> np.ndarray:
     if not np.isfinite([b_pop, b_ideol, tau]).all() or min(b_pop, b_ideol) < 0 or tau <= 0:
         raise ValueError("support coefficients must be nonnegative and tau positive")
     x = np.asarray(opinions, dtype=float)
@@ -28,6 +29,10 @@ def candidate_support(opinions: np.ndarray, candidates: pd.DataFrame,
         if penalty.shape != utility.shape or not np.isfinite(penalty).all() or (penalty < 0).any():
             raise ValueError("penalty must be a finite nonnegative voters x candidates array")
         utility = utility - penalty
+    if utility_adjustment is not None:
+        if (utility_adjustment.shape != utility.shape or not np.isfinite(utility_adjustment).all()):
+            raise ValueError("utility_adjustment must be a finite voters x candidates array")
+        utility = utility + utility_adjustment
     if not np.isfinite(utility).all():
         raise ValueError("candidate utility overflowed; reduce support coefficients")
     # Subtract before dividing to avoid positive overflow at low temperature.

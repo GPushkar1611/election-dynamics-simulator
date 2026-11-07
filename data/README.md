@@ -98,6 +98,16 @@ Each constituency has exactly `NUM_CANDIDATES_PER_CONSTITUENCY` candidates. If t
 
 ### 4.4 political_events.csv — one row per event
 
+The generator creates a fixed number of schedule rows, rather than sampling an
+event-arrival process: 12 local rows for each of 21 constituencies (252), 6
+rows for each of 3 regions (18), and 8 state-wide rows, for 278 total. A
+constituency is loaded with its 12 local rows, its region's 6 rows, and all 8
+state rows (26 total). Rows are records at different geographic scopes, so
+278 is not the number of events seen by one constituency. These defaults make
+a fairly busy synthetic schedule; they are scenario settings, not an estimate
+of a real election's event rate. The counts can be changed with the generator
+options documented in `USAGE.md`.
+
 | Column | Type | Meaning |
 |---|---|---|
 | `event_id` | string | Unique, chronological |
@@ -110,10 +120,29 @@ Each constituency has exactly `NUM_CANDIDATES_PER_CONSTITUENCY` candidates. If t
 | `candidate_id` | string or empty | Optional associated candidate |
 | `intensity` | float [0, 1] | Strength/prominence of the event |
 | `credibility` | float [0, 1] | How believable the information is (External > News > Candidate on average) |
-| `duration` | int ≥ 1 | Days the event stays relevant, starting on `event_day`; truncated at the end of the election |
+| `duration` | int ≥ 1 | Active days, starting on `event_day`; event effects are apportioned over these days |
 | `target_group` | category | `General`, `Rural`, `Urban`, `Students`, `Farmers`, `Unemployed`, `Low-income`, `Middle-income`, `High-income` |
 | `candidate_effect` | float [-1, 1] or empty | Signed effect on the **associated candidate** (empty when `candidate_id` is empty) |
 | `description` | string | Human-readable text |
+
+Optional event-behavior columns can be supplied without changing the base
+generator CSV: `memory_half_life_days` (nonnegative; 0 means persistent),
+`reminder_probability` (0–1 chance per post-duration day),
+`occurrence_probability` (0–1 chance the scheduled event happens),
+`depends_on_event_id` and `condition_probability` (chance of this event if its
+earlier dependency happened), and `structural_effect` (`none` or
+`candidate_withdrawal`). Candidate-free shocks may also set `shock_mode`
+(`balanced` or `directional`) and `opinion_direction` in [-1, 1]; positive
+values shift opinion toward the positive end of the model axis and negative
+values toward the negative end. When omitted, the simulation config supplies the
+defaults: 7-day memory half-life, no reminders, and certain occurrence. A
+withdrawal is permanent for the election and removes the candidate from
+support/vote consideration after its start day.
+
+An example moderate C01 schedule uses 13 relevant events (6 local, 3 regional,
+4 state-wide) and demonstrates these optional fields in
+`event_scenarios/c01_moderate.csv`. It does not modify the checked-in generated
+278-row schedule.
 
 **Scopes**
 
@@ -126,6 +155,16 @@ Each constituency has exactly `NUM_CANDIDATES_PER_CONSTITUENCY` candidates. If t
 Candidate-sourced events always name a candidate (from that constituency or region). News events sometimes concern a candidate. External events and all state-level events name no candidate and carry no `candidate_effect`.
 
 **Distributions:** intensity, credibility and effect are drawn from Beta/Normal distributions whose means depend on event type and source, so two events of the same type differ. `candidate_effect` can be positive, negative or near zero (e.g. controversies skew negative, rallies skew positive, but with large spread). It is a signal about the *candidate*, not a claim that the event is good or bad for every voter; interpretation is left to the simulation team. Campaign events cluster later in the election period; news/external events are spread evenly. The `issue` of an event is weighted toward what local voters care about.
+
+In the current simulator, events are activated on each scheduled active day. The
+total signal is split evenly across the event's duration. Candidate-linked
+events add a signed utility adjustment to that candidate; candidate-free
+events apply a seeded, zero-mean opinion direction to their audience. After the
+active duration, those effects decay by their configured half-life, and an
+optional per-day reminder can reinforce them. `lambda_event` controls signal
+strength separately from social and campaign strength. Paired shock/no-shock
+runs use identical random streams. The event text is descriptive metadata; the
+simulator does not use an LLM or infer effects from that text.
 
 ## 5. Behavioural features — how they differ
 

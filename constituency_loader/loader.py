@@ -11,7 +11,8 @@ except ImportError:  # pragma: no cover - used by the example notebook
 
 
 def load_constituency(data_dir: str | Path, constituency_id: int = 1,
-                      validate: bool = True, election_duration_days: int = 30) -> dict[str, object]:
+                      validate: bool = True, election_duration_days: int = 30,
+                      events_file: str | Path | None = None) -> dict[str, object]:
     """Load a constituency slice from a folder containing the four CSV files.
 
     Returns a dictionary with ``voters``, ``candidates``, ``social_network``,
@@ -24,7 +25,8 @@ def load_constituency(data_dir: str | Path, constituency_id: int = 1,
     voters = pd.read_csv(data_dir / "voters.csv")
     social_network = pd.read_csv(data_dir / "social_network.csv")
     candidates = pd.read_csv(data_dir / "candidates.csv")
-    events = pd.read_csv(data_dir / "political_events.csv",
+    event_path = Path(events_file) if events_file is not None else data_dir / "political_events.csv"
+    events = pd.read_csv(event_path,
                          dtype={"region_id": "Int64", "constituency_id": "Int64"})
 
     if validate:

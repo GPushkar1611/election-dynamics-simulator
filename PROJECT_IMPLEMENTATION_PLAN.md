@@ -80,6 +80,8 @@ Initial sweeps:
 Log opinion distribution, mean, SD, quantiles, and eligible edges each day.
 
 ### 3.3 Candidate and manipulative campaign agents
+
+**Current implementation scope:** actions support `ordinary` platform persuasion and `smear`, a candidate-targeted utility penalty treated as fabricated in the sample scenario. This is narrower than the signal-position cases below: misleading and fabricated message-position signals are not implemented as separate types. If those distinctions remain requirements, add them alongside smear rather than treating the terms as interchangeable.
 Actions run on 30-day timeline. Keep intent/truth label distinct from voter response:
 1. none: no campaign.
 2. ordinary: pull toward candidate's declared platform/policy signal.
@@ -95,14 +97,15 @@ Map groups explicitly: Rural -> urban_rural=Rural; Students -> occupation=Studen
 Sweep lambda_campaign {0.05,0.1,0.2,0.4}, reach {0.1,0.25,0.5,1}, distortion {0.1,0.25,0.5,1} on [-1,1], frequency {0,1,3,7} days per action window. Always run no-campaign control.
 
 ### 3.4 Shared adversarial targeting
-Policies: uniform random; explicit target group; high susceptibility; high influence (weighted out-degree/influence_power); community (only with documented seeded assignment). Compare equal exposure budgets, timing, intensity and signal so only targeting changes. Record counts, coverage, attribute summaries and impact. Keep synthetic recipient IDs internal, not in public report. Treat efficiency as simulated behavior under assumptions, not real campaign advice or causal evidence.
+Policies: uniform random; explicit target group; high susceptibility; high influence (weighted out-degree combined with influence_power); and seeded community targeting. Community labels are inferred once per run using seeded label propagation on the weak projection of the social graph; these are model-derived clusters, not observed geographic or social identities. Current group mappings: Rural/Urban -> urban_rural, Students -> occupation=Student, Farmers -> Farmer or Agricultural labourer, Unemployed -> occupation=Unemployed, and income groups -> wealth_level. Keep the constituency-wide requested exposure budget fixed across policies. If a group or selected community is smaller than the requested budget, select its full eligible audience and report the shortfall. High-susceptibility ranking uses effective susceptibility; high-influence ranking uses weighted out-degree multiplied by influence_power. Compare matched timing, intensity, signal and seeds so targeting is the only changed factor. Record requested/selected counts, coverage, audience attribute summaries and impact. Keep synthetic recipient IDs internal, not in public report. Treat efficiency as simulated behavior under assumptions, not real campaign advice or causal evidence.
 
 ### 3.5 News/event agent and shock scheduler
-Resolve C01, region and state scopes. Event e is active from event_day through event_day+duration-1. For voter i, event strength:
-h_ie = intensity_e * credibility_e * event_sensitivity_i * normalized_issue_weight_ik (use 1 for general).
-Candidate-associated events may change support for that named candidate using candidate_effect. News/External with no candidate must not directly favor one. For neutral events, perturb issue opinion using a documented zero-mean seeded direction; direction is a scenario variable, not inferred bias.
+The simulator now filters constituency, matching-region and state-wide records, activates events on `event_day` through `event_day + duration - 1`, and maps target groups to voter attributes. For voter i, the per-active-day signal is:
+`lambda_event * intensity_e * credibility_e * event_sensitivity_i * normalized_issue_weight_ik / duration_e` (issue weight is 1 for general).
 
-Recommended timing: apply shock at onset, then linearly decay residual through duration; log daily effects and ensure duration 1 applies once. Controls: no events, supplied events, zero-strength neutral events, mild and high shock. Use common random numbers for paired shock/no-shock comparisons.
+Candidate-linked events adjust the named local candidate's utility by signed `candidate_effect`; candidate-free events perturb opinion using a seeded, zero-mean direction. An event naming a candidate outside the local ballot does not boost a local candidate and is treated as neutral for this constituency. Signals accumulate across active days, then decay using a configurable half-life (default 7 days); optional reminders can reinforce them. A zero half-life makes effects persistent. Optional schedule fields support probabilistic occurrence, dependencies on an earlier event, and structural candidate withdrawal. `lambda_event=0` is the no-shock control; default strength is 0.2. Per-day applications, decay, reminders and exposure totals are logged. Duration 1 applies once.
+
+`compare_event_shock` runs matched shock/no-shock simulations with common random streams and returns paired support, vote-share and opinion differences. Candidate-free events support balanced seeded shocks or explicitly directional shifts along the scalar opinion axis. The optional C01 moderate schedule demonstrates these modes and structural/conditional behavior without editing the generated dataset. Still to implement: a multi-seed experiment runner and mappings from directional shocks to named political responses (the current voter/candidate data has no validated “radical-change” or “nationalist” response attribute). Generator event counts are scenario assumptions, not event-rate estimates.
 
 ### 3.6 Turnout and election result
 First version samples Bernoulli(turnout_propensity) at election close. Later sensitivity model:
@@ -110,7 +113,7 @@ p_turnout_i = sigmoid(logit(clamp(turnout_propensity_i)) + gamma_mob*campaign_mo
 Start gamma values at zero; don't fit against synthetic pseudo-truth. Participating voter samples from candidate softmax support with dedicated vote RNG; compare argmax deterministically as sensitivity. Abstainers cast zero. Verify votes + abstentions = population, one vote per voter, candidate totals = turnout, shares sum to 1 when votes exist.
 
 ### 3.7 Daily order
-For each of 30 days: snapshot state; resolve today's actions/events/audiences; compute social signals from snapshot and update synchronously; apply campaign signal; apply event shock/decay; recompute support and optional mobilization; save daily aggregates and sampled view state. At close sample turnout/vote and aggregate. This order is a modeling choice: document it and optionally compare an alternative. Derive RNG child streams from master seed for targeting, shocks, turnout and voting; never rely on global uncontrolled randomness.
+For each of 30 days: snapshot state; resolve today's actions/events/audiences; compute social signals from snapshot and update synchronously; apply campaign signal; apply active event signals; recompute support and optional mobilization; save daily aggregates and sampled view state. At close sample turnout/vote and aggregate. This order is a modeling choice: document it and optionally compare an alternative. Derive RNG child streams from master seed for targeting, shocks, turnout, voting, and event directions; never rely on global uncontrolled randomness.
 
 ## 4. Software architecture and verification
 Suggested modules: config; data loader/validators; network/adjacency; voter/support; candidate actions; shared targeting; events; bounded-confidence dynamics; turnout/vote; simulation loop; experiments/manifests; metrics; plots/dashboard. Keep UI separate from model.
@@ -122,10 +125,11 @@ Use small deterministic fixtures to verify:
 - Zero influence leaves state unchanged; no eligible neighbors means no social movement.
 - One directed edge changes only its target as formula predicts.
 - Zero campaign reach changes nobody; full reach selects all eligible voters.
-- Event scopes/targets/dates/durations work; duration 1 applies once.
-- Neutral no-candidate news doesn't favor a candidate.
+- Event scopes/targets/dates/durations, memory, reminders, dependencies and structural withdrawal work; duration 1 applies once.
+- Neutral no-candidate news does not directly alter candidate utility.
 - Turnout 0 -> no votes; turnout 1 -> one ballot per voter.
 - Fixed config/data/seed reproduces exactly; vote accounting reconciles.
+- Paired shock/no-shock runs share random streams.
 Generator tests do not substitute for simulation verification.
 
 ## 5. Experiment plan and evaluation

@@ -34,7 +34,7 @@ These are 30 simulated days, not 30 real days. Each simulated day updates voter 
 
 ## Verification
 
-- All 36 automated tests pass.
+- All 58 automated tests pass (48 simulator and 10 loader tests).
 - C01 was checked with seeds 42, 43, and 44.
 - Shuffling input rows produces exactly the same results for the same seed.
 - All 3,000 first-day C01 opinions match an independent calculation.
@@ -44,10 +44,11 @@ These are 30 simulated days, not 30 real days. Each simulated day updates voter 
 
 ## Main files
 
-The project is in `D:\election-dynamics-simulator`.
+The project is in the repository root.
 
 - `constituency_loader/`: loader correction, stronger validation, and regression tests.
-- `election_sim/`: configuration, graph, support, social updates, voting, simulation, and command-line runner.
+- `election_sim/`: configuration, graph, support, social updates, voting, campaign targeting, simulation, and command-line runner.
+- `campaign_actions/`: ordinary/smear action examples and targeted-audience examples.
 - `configs/baseline.json` and `configs/frozen.json`: the two baseline scenarios.
 - `tests/test_baseline.py`: baseline verification tests.
 - `data/verify_dataset.py` and `data/manifest.json`: dataset reproduction check and its recorded results.
@@ -66,6 +67,6 @@ Use a new output folder for each run. Run `python -m election_sim --help` for th
 
 ## What remains
 
-The voter/social-network baseline is complete. Campaign effects, adversarial targeting, event effects, batch experiments, uncertainty analysis, and the dashboard/report remain unfinished. The original plan also calls for model/data-profile documentation and clean-environment reproduction.
+The voter/social-network baseline, ordinary/smear campaign mechanics, and uniform, group, high-susceptibility, high-influence, and seeded graph-community recipient policies are implemented. Scheduled event rows are applied on their active days: group, issue importance, and event sensitivity filter exposure; candidate-associated events adjust that candidate's utility, while candidate-free events support balanced or explicitly directional opinion shocks. Effects are apportioned over duration and can decay, receive reminders, depend on an earlier event, or trigger candidate withdrawal. A 13-event C01 example schedule demonstrates these options without changing the 278-row generated dataset. The paired shock/no-shock helper holds random streams constant. These are synthetic mechanisms, not fitted behavioral parameters. Multi-seed experiment workflows, mappings from shock direction to named political responses, issue-aware candidate support, uncertainty analysis, and the dashboard/report remain unfinished. Community labels are inferred from the network; they are not present in voter records. The original plan also calls for model/data-profile documentation and clean-environment reproduction.
 
-The leader's original implementation plan and supplied CSV files are unchanged. All data and results are synthetic; this is not a validated prediction of a real election. The contribution has not been committed or pushed.
+The supplied CSV files remain synthetic and are not a validated prediction of a real election.

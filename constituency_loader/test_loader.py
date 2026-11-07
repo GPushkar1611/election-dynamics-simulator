@@ -14,6 +14,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "synthetic_election_dataset"
+EXAMPLE_EVENTS = ROOT / "event_scenarios" / "c01_moderate.csv"
 
 
 class LoaderTests(unittest.TestCase):
@@ -74,6 +75,16 @@ class LoaderTests(unittest.TestCase):
                 with self.subTest(constituency=constituency):
                     result = load_constituency(directory, constituency)
                     self.assertEqual(set(result["events"].event_id), expected_ids)
+
+    def test_alternate_moderate_event_schedule_loads_with_expected_scopes(self):
+        result = load_constituency(DATA, 1, events_file=EXAMPLE_EVENTS)
+        events = result["events"]
+        self.assertEqual(len(events), 13)
+        self.assertEqual(int(events.constituency_id.notna().sum()), 6)
+        self.assertEqual(int((events.constituency_id.isna() & events.region_id.notna()).sum()), 3)
+        self.assertEqual(int((events.constituency_id.isna() & events.region_id.isna()).sum()), 4)
+        self.assertIn("shock_mode", events)
+        self.assertIn("structural_effect", events)
 
     def test_unknown_constituency_has_a_clear_error(self):
         with self.assertRaisesRegex(ValueError, "was not found"):

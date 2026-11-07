@@ -10,9 +10,12 @@ import numpy as np
 import pandas as pd
 
 from .config import SimulationConfig
-from .campaign.effects import action_rng, apply_ordinary, apply_smear, select_recipients
+from .campaign.effects import (GROUP_MATCHERS, action_rng, apply_ordinary, apply_smear,
+                               assign_communities,
+                               budget, outgoing_influence_scores, select_recipients)
 from .campaign.models import CampaignAction, check_actions
 from .dynamics import social_step
+from .events import active_on as event_active_on, prepare_events
 from .network import build_incoming
 from .support import candidate_support
 from .voting import election_result
@@ -64,13 +67,15 @@ def _code_revision() -> dict:
                               hashlib.sha256(p.read_bytes()).hexdigest() for p in files}}
 
 
-def _scenario(config: SimulationConfig, actions: list[CampaignAction]) -> str:
+def _scenario(config: SimulationConfig, actions: list[CampaignAction], has_events: bool) -> str:
     types = {action.message_type for action in actions}
     if "smear" in types:
-        return "smear_campaign"
-    if "ordinary" in types:
-        return "ordinary_campaign"
-    return "frozen" if config.lambda_social == 0 else "social_only"
+        scenario = "smear_campaign"
+    elif "ordinary" in types:
+        scenario = "ordinary_campaign"
+    else:
+        scenario = "frozen" if config.lambda_social == 0 else "social_only"
+    return f"{scenario}_with_events" if has_events and config.lambda_event > 0 else scenario
 
 
 def simulate(config: SimulationConfig, data: dict, seed: int = 42,
@@ -109,26 +114,80 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
     if actions and config.lambda_campaign == 0:
         raise ValueError("campaign actions were given but lambda_campaign is 0, so they would do nothing")
     names = ("campaign", "shocks", "turnout", "voting")
-    children = np.random.SeedSequence(seed).spawn(len(names))
+    uses_communities = any(action.target_policy == "community" for action in actions)
+    # Keep established campaign/social/turnout/voting streams and the
+    # community stream stable; reserve a separate stream for event directions.
+    children = np.random.SeedSequence(seed).spawn(6)
     child_seeds = {name: [int(v) for v in child.generate_state(4)]
-                   for name, child in zip(names, children)}
+                   for name, child in zip(names, children[:len(names)])}
+    if uses_communities:
+        child_seeds["community"] = [int(v) for v in children[4].generate_state(4)]
+    child_seeds["events"] = [int(v) for v in children[5].generate_state(4)]
     rng = {name: np.random.default_rng(value) for name, value in child_seeds.items()}
+    communities = (assign_communities(voters, edges, rng["community"])
+                   if uses_communities else None)
     candidate_ids = candidates.candidate_id.tolist()
+    events = prepare_events(data.get("events", pd.DataFrame()), voters, candidate_ids,
+                            child_seeds["events"], config.days, config.constituency_id,
+                            config.event_memory_half_life_days,
+                            config.event_reminder_probability)
     candidate_positions = dict(zip(candidate_ids, candidates[[
         "position_employment", "position_economy", "position_education",
         "position_healthcare", "position_agriculture"]].mean(axis=1)))
     recipients = {
-        action.action_id: select_recipients(action, len(voters),
-                                            action_rng(child_seeds["campaign"], action.action_id))
+        action.action_id: select_recipients(
+            action, voters, edges, action_rng(child_seeds["campaign"], action.action_id),
+            susceptibility=susceptibility, communities=communities)
         for action in actions
     }
-    # Smear penalties lower utility per voter and candidate; zero means no smear.
+    influence_scores = outgoing_influence_scores(voters, edges)
+    weighted_out_degree = np.divide(
+        influence_scores, voters.influence_power.to_numpy(dtype=float),
+        out=np.zeros(len(voters), dtype=float),
+        where=voters.influence_power.to_numpy(dtype=float) > 0)
+    audience_summaries = []
+    for action in actions:
+        selected = recipients[action.action_id]
+        requested = budget(len(voters), action.reach_fraction)
+        audience = voters.iloc[selected]
+        group_count = (int(GROUP_MATCHERS[action.target_group](voters).sum())
+                       if action.target_policy == "group" else None)
+        community_id = (int(communities[selected[0]]) if action.target_policy == "community" and len(selected)
+                        else action.community_id)
+        community_count = (int(np.sum(communities == community_id))
+                           if action.target_policy == "community" and community_id is not None else None)
+        audience_summaries.append({
+            "action_id": action.action_id,
+            "target_policy": action.target_policy,
+            "target_group": action.target_group,
+            "community_id": community_id,
+            "requested_recipients": requested,
+            "selected_recipients": len(selected),
+            "shortfall": requested - len(selected),
+            "population_coverage": len(selected) / len(voters),
+            "eligible_group_population": group_count,
+            "eligible_community_population": community_count,
+            "mean_susceptibility": (float(audience.susceptibility.mean()) if len(audience) else None),
+            "mean_effective_susceptibility": (float(susceptibility[selected].mean()) if len(selected) else None),
+            "mean_influence_power": (float(audience.influence_power.mean()) if len(audience) else None),
+            "mean_weighted_out_degree": (float(weighted_out_degree[selected].mean()) if len(selected) else None),
+            "mean_influence_score": (float(influence_scores[selected].mean()) if len(selected) else None),
+        })
+    # Smears lower utility; event signals can raise or lower candidate utility.
     penalty = np.zeros((len(voters), len(candidate_ids)))
+    event_utility = np.zeros_like(penalty)
     summaries, support_rows, distributions, sampled_rows = [], [], [], []
     # A deterministic systematic ID sample for view state, not an electorate estimate.
     sample_indices = np.linspace(0, len(voters) - 1, min(100, len(voters)), dtype=int)
     bins = np.linspace(-1, 1, 21)
-    support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol, config.tau, penalty)
+    support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol,
+                                config.tau, penalty, event_utility)
+    applied_event_days = 0
+    event_exposures = 0
+    event_memory_updates = 0
+    event_reminders = 0
+    withdrawn_candidates = set()
+    event_rows = []
     for day in range(config.days + 1):
         previous = opinions.copy()
         if day:
@@ -145,12 +204,82 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                     penalty = apply_smear(penalty, susceptibility, recipients[action.action_id],
                                           candidate_ids.index(action.target_candidate_id),
                                           action, config.lambda_campaign)
-            support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol, config.tau, penalty)
+            active_events = [event for event in events if event_active_on(event, day)]
+            if config.lambda_event > 0:
+                for event in events:
+                    if not event["occurs"]:
+                        continue
+                    candidate_id = event["candidate_id"]
+                    if (event["structural_effect"] == "candidate_withdrawal"
+                            and day == event["start_day"]):
+                        if (candidate_id not in withdrawn_candidates
+                                and len(withdrawn_candidates) == len(candidate_ids) - 1):
+                            raise ValueError("event schedule withdraws every candidate")
+                        withdrawn_candidates.add(candidate_id)
+                        event_utility[:, candidate_ids.index(candidate_id)] = -1e6
+                        event_rows.append({"day": day, "event_id": event["event_id"],
+                                           "candidate_id": candidate_id,
+                                           "effect": "candidate_withdrawal"})
+
+                    # After the event's active window, people forget the
+                    # signal exponentially. Zero half-life means it persists.
+                    end_day = event["start_day"] + event["duration"] - 1
+                    if day > end_day and event["memory_half_life_days"] > 0:
+                        decay = 0.5 ** (1 / event["memory_half_life_days"])
+                        old = event["contribution"].copy()
+                        event["contribution"] *= decay
+                        delta = event["contribution"] - old
+                        if candidate_id is not None:
+                            event_utility[:, candidate_ids.index(candidate_id)] += (
+                                delta * event["candidate_effect"])
+                        else:
+                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                        event_memory_updates += 1
+                        event_rows.append({"day": day, "event_id": event["event_id"],
+                                           "candidate_id": event["associated_candidate_id"],
+                                           "effect": "memory_decay"})
+
+                    if event_active_on(event, day):
+                        strength = (config.lambda_event * event["intensity"] * event["credibility"]
+                                    / event["duration"])
+                        delta = strength * event["weights"]
+                        event["contribution"] += delta
+                        if candidate_id is not None:
+                            event_utility[:, candidate_ids.index(candidate_id)] += (
+                                delta * event["candidate_effect"])
+                        else:
+                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                        applied_event_days += 1
+                        event_exposures += len(event["audience"])
+                        event_rows.append({"day": day, "event_id": event["event_id"],
+                                           "source_type": event.get("source_type"),
+                                           "candidate_id": event["associated_candidate_id"],
+                                           "audience_size": len(event["audience"]),
+                                           "mean_signal_strength": float(strength * event["weights"].mean()),
+                                           "effect": "active_signal"})
+                    elif (day > end_day and event["reminder_probability"] > 0
+                          and event["reminder_rng"].random() < event["reminder_probability"]):
+                        strength = (config.lambda_event * event["intensity"] * event["credibility"]
+                                    * config.event_reminder_strength)
+                        delta = strength * event["weights"]
+                        event["contribution"] += delta
+                        if candidate_id is not None:
+                            event_utility[:, candidate_ids.index(candidate_id)] += (
+                                delta * event["candidate_effect"])
+                        else:
+                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                        event_reminders += 1
+                        event_rows.append({"day": day, "event_id": event["event_id"],
+                                           "candidate_id": event["associated_candidate_id"],
+                                           "effect": "reminder"})
+            support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol,
+                                        config.tau, penalty, event_utility)
         # Counts reflect the state logged for this day; the next update uses it.
         eligible = int((np.abs(opinions[graph.sources] - opinions[graph.targets]) <=
                         confidence[graph.targets]).sum())
         quantiles = np.quantile(opinions, [0.05, 0.25, 0.5, 0.75, 0.95])
         active_actions = [action for action in actions if action.active_on(day)]
+        active_events = [event for event in events if event_active_on(event, day)]
         summaries.append({"day": day, "opinion_mean": float(opinions.mean()),
                           "opinion_sd": float(opinions.std()),
                           "polarization_variance": float(opinions.var()),
@@ -159,6 +288,15 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                           "active_campaign_actions": len(active_actions),
                           "campaign_exposures_today": int(sum(len(recipients[action.action_id])
                                                                for action in active_actions)),
+                          "active_events": len(active_events),
+                          "event_memory_updates_today": int(sum(
+                              row["day"] == day and row.get("effect") == "memory_decay"
+                              for row in event_rows)),
+                          "event_reminders_today": int(sum(
+                              row["day"] == day and row.get("effect") == "reminder"
+                              for row in event_rows)),
+                          "event_exposures_today": int(sum(len(event["audience"])
+                                                            for event in active_events)),
                           "mean_absolute_daily_movement": float(np.abs(opinions - previous).mean()),
                           "mean_absolute_initial_movement": float(np.abs(opinions - initial).mean())})
         for candidate_id, value in zip(candidate_ids, support.mean(axis=0)):
@@ -187,12 +325,25 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                                                   for action in actions)),
                    "campaigns_applied": int(sum(action.active_on(day)
                                                   for action in actions for day in range(1, config.days + 1))),
-                   "events_applied": 0,
-                   "loaded_events_not_applied": len(data.get("events", []))}
+                   "campaign_audiences": audience_summaries,
+                   "community_count": (int(np.unique(communities).size) if communities is not None else 0),
+                   "community_sizes": ([int(size) for size in np.unique(communities, return_counts=True)[1]]
+                                       if communities is not None else []),
+                   "events_loaded": len(events), "events_applied": applied_event_days,
+                   "unique_events_applied": len({row["event_id"] for row in event_rows}),
+                   "events_occurred": sum(event["occurs"] for event in events),
+                   "events_suppressed": sum(not event["occurs"] for event in events),
+                   "event_memory_updates": event_memory_updates,
+                   "event_reminders": event_reminders,
+                   "withdrawn_candidates": sorted(withdrawn_candidates),
+                   "event_exposures": event_exposures, "event_applications": event_rows,
+                   "loaded_events_not_applied": (len(events) if config.lambda_event == 0 else
+                                                  sum(not event["occurs"] for event in events))}
     metadata = {"synthetic": True, "claim": "Synthetic scenario; not an empirically validated forecast",
-                "scenario": _scenario(config, actions),
+                "scenario": _scenario(config, actions, bool(events)),
                 "config": asdict(config), "master_seed": seed, "child_seeds": child_seeds,
                 "campaign_actions": [asdict(action) for action in actions],
+                "event_model": "Active-day signals apportioned over duration; effects decay by configurable half-life and can be reminded; withdrawals are structural",
                 "rng": "numpy.default_rng (PCG64); canonical voter/candidate ID order",
                 "view_sample": "Up to 100 systematically spaced canonical voter IDs; internal visualization only, not a representative sample",
                 "created_at_utc": datetime.now(timezone.utc).isoformat(),
