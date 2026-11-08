@@ -1,0 +1,8 @@
+{
+  "party_agents": [
+    {"party_id": "P1", "strategy": "greedy", "budget": 3000, "start_day": 10},
+    {"party_id": "P2", "strategy": "go_negative", "budget": 3000, "start_day": 10},
+    {"party_id": "P3", "strategy": "rebut", "budget": 3000, "start_day": 10}
+  ],
+  "party_campaigns": []
+}

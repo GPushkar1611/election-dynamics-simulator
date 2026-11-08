@@ -191,6 +191,23 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
              record_history: bool = False,
              agents: list[CandidateAgent] | None = None,
              news_agent: NewsAgent | None = None) -> RunResult:
+    """Run one constituency; regional runs share this same daily engine."""
+    engine = _simulate_steps(config, data, seed, campaign_actions, record_history, agents, news_agent)
+    try:
+        snapshot = next(engine)
+        while True:
+            opinions, susceptibility, confidence, graph = snapshot
+            updated, _ = social_step(opinions, susceptibility, confidence, graph, config.lambda_social)
+            snapshot = engine.send(updated)
+    except StopIteration as finished:
+        return finished.value
+
+
+def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
+             campaign_actions: list[CampaignAction] | None = None,
+             record_history: bool = False,
+             agents: list[CandidateAgent] | None = None,
+             news_agent: NewsAgent | None = None) -> RunResult:
     """Run one synthetic election.
 
     campaign_actions: scripted actions fixed in advance (campaign_actions/*.json).
@@ -334,7 +351,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                 actions.sort(key=lambda item: item.action_id)
 
             # (2) Voters influence each other.
-            opinions, _ = social_step(opinions, susceptibility, confidence, graph, config.lambda_social)
+            opinions = yield (opinions.copy(), susceptibility, confidence, graph)
 
             # (3) Campaign messages, in action_id order.
             for action in actions:

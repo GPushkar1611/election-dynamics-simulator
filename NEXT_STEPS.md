@@ -25,7 +25,7 @@ All 98 simulator tests and 10 loader tests pass. One C01 run (3,000 voters, 30 d
 2. ~~No `misleading` message type; smears do not spread.~~ Fixed in Step 2.
 3. **Turnout ignores campaigns and events.** `gamma_mob` and `gamma_event` from plan §3.6 are not connected.
 4. **No multi-seed runner, and no paired campaign comparison.** Only events have `compare_event_shock`.
-5. **Single constituency only.** 5,533 cross-constituency edges are dropped, and there is no spillover.
+5. ~~Single constituency only.~~ Fixed in Step 4: regional social influence with controlled spillover; external region boundaries remain excluded.
 6. ~~Only 100 sampled voters per day are saved.~~ Fixed: use `record_history=True` / `--record-history` (Step 1).
 7. **No visualization or animation code.** `matplotlib` is not in `requirements.txt`.
 8. **The C01 baseline is a landslide.** CAND_0001 gets about 67%, so campaigns won't visibly change the result. The demo needs a closer race.
@@ -83,7 +83,11 @@ Tests: `tests/test_news.py`. Strategic voting remains future work.
 - Connect turnout mobilization, keeping the gammas at 0 by default:
   `p_i = sigmoid(logit(propensity_i) + gamma_mob * campaign_exposure_i + gamma_event * event_exposure_i)`
 
-### Step 4: Multiple constituencies (A, E)
+### Step 4: Multiple constituencies (A, E) - DONE
+Implemented in `election_sim/region.py` using the shared daily simulation engine.
+Usage and assumptions: `STEP_4.md`. CLI: `python -m election_sim.region_cli`.
+Tests: `tests/test_region.py`; paired single-seed spillover sweep available.
+Cross-boundary coupling applies to social opinions; smear claims remain local.
 - Add `simulate_region(config, constituency_ids, seed, spillover=0.0)`.
 - Simulate all of the region's voters as one array. Keep cross-constituency edges, but multiply their weight by `spillover`. With `spillover=0` the constituencies are independent, which acts as the control.
 - Region 1 has 7 constituencies, about 21,000 voters, which is still fast with `np.bincount`.
@@ -178,7 +182,7 @@ Not needed for the core model: DeGroot and bounded-confidence dynamics model *de
 - [x] At least 3 candidate strategies, polls with noise, budgets enforced
 - [x] `misleading` type and smear spread, with tests
 - [x] `NewsAgent` with fact-check and poll release; mobilization connected
-- [ ] `simulate_region` with spillover sweep
+- [x] `simulate_region` with spillover sweep
 - [ ] `run_batch` and `compare_campaign`, 30-seed results
 - [ ] `viz.py` renders an MP4 of several constituencies with campaign and event overlays
 - [ ] `notebooks/final_simulation.ipynb` runs top to bottom on a clean install
