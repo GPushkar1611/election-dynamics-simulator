@@ -1,12 +1,17 @@
 """Scheduled event timing, audience, and signal semantics."""
 
+import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 import pandas as pd
 
 from election_sim import SimulationConfig, simulate
-from election_sim.experiments import compare_event_shock
+from election_sim.experiments import (EVENT_FACTORIAL_ARMS, compare_event_shock,
+                                     run_event_factorial_sweep,
+                                     run_event_seed_sweep)
 from test_baseline import fixture
 
 
@@ -94,6 +99,80 @@ class EventSimulationTests(unittest.TestCase):
         self.assertGreater(final.mean(), data["voters"].initial_opinion.mean())
         self.assertAlmostEqual(final.mean() - data["voters"].initial_opinion.mean(), 0.75)
 
+    def test_issue_specific_neutral_event_updates_only_that_issue_in_issue_mode(self):
+        data = event_fixture()
+        data["voters"]["initial_opinion"] = [-0.1, 0.0, 0.1]
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            data["voters"][f"issue_{issue}"] = 1.0 if issue == "healthcare" else 0.0
+        shock = event(candidate_id=None, candidate_effect=None, issue="healthcare",
+                      shock_mode="directional", opinion_direction=None,
+                      issue_direction=0.75)
+        config = SimulationConfig(days=2, lambda_social=0, lambda_event=1,
+                                  support_mode="synthetic_issue_profile",
+                                  synthetic_issue_dispersion=0,
+                                  event_memory_half_life_days=1)
+        result = simulate(config, {**data, "events": shock}, 17)
+        state = result.final_state
+        np.testing.assert_array_equal(state.final_opinion,
+                                      data["voters"].initial_opinion.to_numpy())
+        expected_delta = np.array([0.375, 0.1875, 0.0])
+        np.testing.assert_allclose(
+            state.final_issue_preference_healthcare.to_numpy()
+            - data["voters"].initial_opinion.to_numpy(), expected_delta)
+        for issue in ("employment", "economy", "education", "agriculture"):
+            np.testing.assert_allclose(
+                state[f"final_issue_preference_{issue}"],
+                data["voters"].initial_opinion)
+        self.assertGreater(state.loc[0, "support_right"], state.loc[0, "support_left"])
+
+    def test_issue_specific_directional_event_keeps_scalar_mode_compatibility(self):
+        data = event_fixture()
+        data["voters"]["initial_opinion"] = [-0.1, 0.0, 0.1]
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            data["voters"][f"issue_{issue}"] = 1.0 if issue == "healthcare" else 0.0
+        shock = event(candidate_id=None, candidate_effect=None, issue="healthcare",
+                      shock_mode="directional", opinion_direction=None,
+                      issue_direction=0.75)
+        result = simulate(SimulationConfig(days=1, lambda_social=0, lambda_event=1),
+                          {**data, "events": shock}, 17)
+        np.testing.assert_allclose(result.final_state.final_opinion,
+                                   [-0.1 + 0.75, 0.0 + 0.375, 0.1])
+
+    def test_general_neutral_event_moves_all_issue_preferences_with_scalar_center(self):
+        data = event_fixture()
+        data["voters"]["initial_opinion"] = [-0.1, 0.0, 0.1]
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            data["voters"][f"issue_{issue}"] = 0.2
+        shock = event(candidate_id=None, candidate_effect=None, issue="general",
+                      shock_mode="directional", opinion_direction=0.5)
+        result = simulate(SimulationConfig(days=1, lambda_social=0, lambda_event=1,
+                                           support_mode="synthetic_issue_profile",
+                                           synthetic_issue_dispersion=0),
+                          {**data, "events": shock}, 17)
+        opinion_delta = (result.final_state.final_opinion.to_numpy()
+                         - data["voters"].initial_opinion.to_numpy())
+        np.testing.assert_allclose(opinion_delta, [0.5, 0.25, 0.0])
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            preference_delta = (result.final_state[f"final_issue_preference_{issue}"].to_numpy()
+                                - data["voters"].initial_opinion.to_numpy())
+            np.testing.assert_allclose(preference_delta, opinion_delta)
+
+    def test_candidate_associated_event_still_changes_utility_not_issue_state(self):
+        data = event_fixture()
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            data["voters"][f"issue_{issue}"] = 0.2
+        candidate_event = event(issue="healthcare", candidate_effect=1.0)
+        config = SimulationConfig(days=1, lambda_social=0, lambda_event=1,
+                                  support_mode="synthetic_issue_profile",
+                                  synthetic_issue_dispersion=0)
+        result = simulate(config, {**data, "events": candidate_event}, 17)
+        control = simulate(config, {**data, "events": pd.DataFrame()}, 17)
+        for issue in ("employment", "economy", "education", "healthcare", "agriculture"):
+            np.testing.assert_allclose(result.final_state[f"final_issue_preference_{issue}"],
+                                       control.final_state[f"final_issue_preference_{issue}"])
+        self.assertGreater(result.final_state.support_left.mean(),
+                           control.final_state.support_left.mean())
+
     def test_zero_strength_is_a_no_shock_control(self):
         data = event_fixture()
         control = run(data, pd.DataFrame(), days=1)
@@ -173,6 +252,80 @@ class EventSimulationTests(unittest.TestCase):
                          paired.with_shock.metadata["child_seeds"])
         self.assertGreater(paired.candidate_effects.support_difference.abs().sum(), 0)
         self.assertEqual(len(paired.candidate_effects), 2)
+        rural = paired.group_effects.query("group == 'Rural'")
+        urban = paired.group_effects.query("group == 'Urban'")
+        self.assertEqual(rural.voter_count.unique().tolist(), [2])
+        self.assertEqual(urban.voter_count.unique().tolist(), [1])
+
+    def test_multi_seed_sweep_summarizes_paired_effects_and_saves_results(self):
+        data = {**event_fixture(), "events": event()}
+        config = SimulationConfig(days=1, lambda_social=0, lambda_event=0.8)
+        sweep = run_event_seed_sweep(config, data, [17, 18, 19])
+        self.assertEqual(sweep.per_seed.seed.tolist(), [17, 18, 19])
+        self.assertEqual(len(sweep.per_seed_candidate_effects), 6)
+        self.assertEqual(len(sweep.candidate_summary), 2)
+        self.assertEqual(sweep.overall_summary.iloc[0].seed_count, 3)
+        self.assertTrue(sweep.candidate_summary.support_difference_p05.le(
+            sweep.candidate_summary.support_difference_p95).all())
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "event_sweep"
+            sweep.save(output)
+            self.assertTrue((output / "per_seed.csv").exists())
+            self.assertTrue((output / "per_seed_candidate_effects.csv").exists())
+            self.assertTrue((output / "candidate_summary.csv").exists())
+            self.assertTrue((output / "overall_summary.csv").exists())
+            self.assertTrue((output / "per_seed_group_effects.csv").exists())
+            self.assertTrue((output / "group_summary.csv").exists())
+            self.assertEqual(json.loads((output / "manifest.json").read_text())["seeds"],
+                             [17, 18, 19])
+
+    def test_multi_seed_sweep_rejects_invalid_scenarios(self):
+        data = {**event_fixture(), "events": event()}
+        config = SimulationConfig(days=1, lambda_social=0, lambda_event=0.8)
+        with self.assertRaisesRegex(ValueError, "unique"):
+            run_event_seed_sweep(config, data, [3, 3])
+        with self.assertRaisesRegex(ValueError, "nonempty"):
+            run_event_seed_sweep(config, {**data, "events": pd.DataFrame()}, [3])
+
+    def test_factorial_arms_separate_structural_candidate_and_neutral_events(self):
+        data = event_fixture()
+        candidate_signal = event(event_id="candidate-signal", event_day=1)
+        withdrawal = event(event_id="withdrawal", event_day=2,
+                           structural_effect="candidate_withdrawal")
+        neutral = event(event_id="neutral", event_day=1, candidate_id=None,
+                        candidate_effect=None, shock_mode="directional", opinion_direction=0.6)
+        dependent_neutral = event(event_id="dependent-neutral", event_day=2,
+                                  candidate_id=None, candidate_effect=None,
+                                  depends_on_event_id="candidate-signal")
+        data["events"] = pd.concat([candidate_signal, withdrawal, neutral,
+                                     dependent_neutral], ignore_index=True)
+        config = SimulationConfig(days=2, lambda_social=0, lambda_event=1)
+        result = run_event_factorial_sweep(config, data, [17, 18])
+        self.assertEqual(result.per_seed_arm.arm.nunique(), len(EVENT_FACTORIAL_ARMS))
+        self.assertEqual(len(result.per_seed_arm), 2 * len(EVENT_FACTORIAL_ARMS))
+        self.assertTrue(result.per_seed_arm.query("arm == 'structural_only'")
+                        .withdrawn_candidates.eq("left").all())
+        self.assertTrue(result.per_seed_arm.query("arm == 'neutral_shocks_only'")
+                        .events_suppressed.gt(0).all())
+        rural = result.group_summary.query(
+            "arm == 'neutral_shocks_only' and group == 'Rural'")
+        self.assertFalse(rural.empty)
+        self.assertEqual(rural.seed_count.unique().tolist(), [2])
+        left_full = result.candidate_summary.query(
+            "arm == 'full_schedule' and candidate_id == 'left'")
+        control = simulate(SimulationConfig(days=2, lambda_social=0, lambda_event=0),
+                           {**data, "events": pd.DataFrame()}, 17)
+        expected_change = -float(control.final_state.support_left.mean())
+        self.assertAlmostEqual(left_full.mean_support_difference_vs_no_events_mean.iloc[0],
+                               expected_change, places=5)
+
+    def test_factorial_sweep_rejects_missing_seed_list_or_events(self):
+        data = {**event_fixture(), "events": event()}
+        config = SimulationConfig(days=1, lambda_social=0, lambda_event=1)
+        with self.assertRaisesRegex(ValueError, "at least one seed"):
+            run_event_factorial_sweep(config, data, [])
+        with self.assertRaisesRegex(ValueError, "nonempty"):
+            run_event_factorial_sweep(config, {**data, "events": pd.DataFrame()}, [3])
 
 
 if __name__ == "__main__":

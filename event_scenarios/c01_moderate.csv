@@ -1,14 +1,14 @@
-event_id,region_id,constituency_id,event_day,source_type,event_type,issue,candidate_id,intensity,credibility,duration,target_group,candidate_effect,description,memory_half_life_days,reminder_probability,occurrence_probability,depends_on_event_id,condition_probability,structural_effect,shock_mode,opinion_direction
-EVT_00002,1.0,1.0,1,External,Agricultural issue,agriculture,,0.3608,0.932,7,Farmers,,Agricultural issue raised in Constituency 1 affecting farmers.,8.0,0.15,1.0,,1.0,none,balanced,
-EVT_00010,,,2,External,Healthcare issue,healthcare,,0.2886,0.7118,6,General,,Scenario mechanic: a state-wide shock shifts exposed voters toward the positive end of the opinion scale.,7.0,0.0,1.0,EVT_00002,0.95,none,directional,0.75
-EVT_00032,1.0,,5,News,Other,general,,0.5965,0.9783,2,General,,Minor political news in Region 1 (general local concerns).,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00043,1.0,1.0,7,Candidate,Manifesto announcement,employment,CAND_0001,0.6717,0.4217,4,Unemployed,0.2504,"Campaign promises released for Constituency 1, emphasising jobs and employment. Led by Progressive Alliance candidate CAND_0001.",7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00060,,,9,News,Education initiative,education,,0.2527,0.4308,6,Students,,New schooling and education plan unveiled in the state.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00075,1.0,1.0,10,Candidate,Campaign rally,employment,CAND_0001,0.637,0.496,2,Unemployed,0.2835,Campaign rally held in Constituency 1 centred on jobs and employment. Led by Progressive Alliance candidate CAND_0001.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00118,1.0,,16,News,Healthcare issue,healthcare,,0.2526,0.4825,3,Rural,,Healthcare issue reported in Region 1.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00208,,,24,News,Employment announcement,employment,,0.2912,0.7959,5,General,,Employment drive announced in the state.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00211,1.0,1.0,24,Candidate,Controversy,economy,CAND_0001,0.1825,0.6532,7,General,-0.0807,Scenario mechanic: the associated candidate withdraws on this day.,7.0,0.0,1.0,,1.0,candidate_withdrawal,balanced,
-EVT_00230,1.0,1.0,26,External,Other,healthcare,,0.7455,0.9537,2,Low-income,,Miscellaneous political development in Constituency 1 (healthcare).,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00250,,,28,News,Agricultural issue,agriculture,,0.3938,0.6849,3,General,,Farm-sector concern reported in the state.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00251,1.0,,28,News,Agricultural issue,agriculture,,0.2072,0.9314,3,Rural,,Agricultural issue raised in Region 1 affecting farmers.,7.0,0.0,1.0,,1.0,none,balanced,
-EVT_00267,1.0,1.0,30,News,Controversy,economy,CAND_0001,0.6619,0.7538,1,High-income,-0.0223,Scenario mechanic: the associated candidate withdraws on this day.,7.0,0.0,1.0,,1.0,none,balanced,
+event_id,region_id,constituency_id,event_day,source_type,event_type,issue,candidate_id,intensity,credibility,duration,target_group,candidate_effect,description,memory_half_life_days,reminder_probability,occurrence_probability,depends_on_event_id,condition_probability,structural_effect,shock_mode,opinion_direction,issue_direction
+EVT_00002,1.0,1.0,1,External,Agricultural issue,agriculture,,0.3608,0.932,7,Farmers,,Agricultural issue raised in Constituency 1 affecting farmers.,8.0,0.15,1.0,,1.0,none,balanced,,
+EVT_00010,,,2,External,Healthcare issue,healthcare,,0.2886,0.7118,6,General,,Scenario mechanic: a state-wide shock shifts exposed voters' healthcare preference.,7.0,0.0,1.0,EVT_00002,0.95,none,directional,,0.75
+EVT_00032,1.0,,5,News,Other,general,,0.5965,0.9783,2,General,,Minor political news in Region 1 (general local concerns).,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00043,1.0,1.0,7,Candidate,Manifesto announcement,employment,CAND_0001,0.6717,0.4217,4,Unemployed,0.2504,"Campaign promises released for Constituency 1, emphasising jobs and employment. Led by Progressive Alliance candidate CAND_0001.",7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00060,,,9,News,Education initiative,education,,0.2527,0.4308,6,Students,,New schooling and education plan unveiled in the state.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00075,1.0,1.0,10,Candidate,Campaign rally,employment,CAND_0001,0.637,0.496,2,Unemployed,0.2835,Campaign rally held in Constituency 1 centred on jobs and employment. Led by Progressive Alliance candidate CAND_0001.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00118,1.0,,16,News,Healthcare issue,healthcare,,0.2526,0.4825,3,Rural,,Healthcare issue reported in Region 1.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00208,,,24,News,Employment announcement,employment,,0.2912,0.7959,5,General,,Employment drive announced in the state.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00211,1.0,1.0,24,Candidate,Controversy,economy,CAND_0001,0.1825,0.6532,7,General,-0.0807,Scenario mechanic: the associated candidate withdraws on this day.,7.0,0.0,1.0,,1.0,candidate_withdrawal,balanced,,
+EVT_00230,1.0,1.0,26,External,Other,healthcare,,0.7455,0.9537,2,Low-income,,Miscellaneous political development in Constituency 1 (healthcare).,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00250,,,28,News,Agricultural issue,agriculture,,0.3938,0.6849,3,General,,Farm-sector concern reported in the state.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00251,1.0,,28,News,Agricultural issue,agriculture,,0.2072,0.9314,3,Rural,,Agricultural issue raised in Region 1 affecting farmers.,7.0,0.0,1.0,,1.0,none,balanced,,
+EVT_00267,1.0,1.0,30,News,Controversy,economy,CAND_0001,0.6619,0.7538,1,High-income,-0.0223,Scenario mechanic: the associated candidate withdraws on this day.,7.0,0.0,1.0,,1.0,none,balanced,,

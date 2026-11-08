@@ -22,7 +22,7 @@ from .dynamics import social_step
 from .events import active_on as event_active_on
 from .network import build_incoming
 from .news import NewsAgent
-from .support import candidate_support
+from .support import ISSUES, candidate_support, synthetic_issue_offsets
 from .voting import election_result, mobilized_propensity
 
 
@@ -61,8 +61,10 @@ HISTORY_ARRAYS = ("voter_ids", "candidate_ids", "action_ids", "opinions", "suppo
 def save_history(history: dict, directory: str | Path) -> None:
     """Write the per-day arrays to history.npz and the timeline to JSON."""
     directory = Path(directory)
-    np.savez_compressed(directory / "history.npz",
-                        **{name: history[name] for name in HISTORY_ARRAYS})
+    arrays = {name: history[name] for name in HISTORY_ARRAYS}
+    if "issue_preferences" in history:
+        arrays["issue_preferences"] = history["issue_preferences"]
+    np.savez_compressed(directory / "history.npz", **arrays)
     (directory / "history_timeline.json").write_text(
         json.dumps(history["timeline"], indent=2) + "\n", encoding="utf-8")
 
@@ -146,13 +148,15 @@ def _scenario(config: SimulationConfig, actions: list[CampaignAction], has_agent
 # longer used; keeping fixed indices keeps every other stream (and so results
 # from earlier versions) unchanged.
 STREAM_INDEX = {"campaign": 0, "turnout": 2, "voting": 3, "community": 4,
-                "events": 5, "polls": 6, "spread": 7}
+                "events": 5, "polls": 6, "spread": 7,
+                "synthetic_issue_profile": 8}
 
 
-def _child_seeds(seed: int) -> dict:
+def _child_seeds(seed: int, include_issue_profile: bool = False) -> dict:
     children = np.random.SeedSequence(seed).spawn(max(STREAM_INDEX.values()) + 1)
     return {name: [int(value) for value in children[index].generate_state(4)]
-            for name, index in STREAM_INDEX.items()}
+            for name, index in STREAM_INDEX.items()
+            if include_issue_profile or name != "synthetic_issue_profile"}
 
 
 def _audience_summary(action: CampaignAction, selected: np.ndarray, voters: pd.DataFrame,
@@ -258,7 +262,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
         raise ValueError("campaign actions or agents were given but lambda_campaign is 0, "
                          "so they would do nothing")
 
-    child_seeds = _child_seeds(seed)
+    child_seeds = _child_seeds(
+        seed, include_issue_profile=config.support_mode == "synthetic_issue_profile")
     turnout_rng, vote_rng, poll_rng, spread_rng = (
         np.random.default_rng(child_seeds[name]) for name in ("turnout", "voting", "polls", "spread"))
     news_agent = news_agent or NewsAgent(random_events_per_day=config.random_news_rate)
@@ -270,6 +275,24 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
     platforms = dict(zip(candidate_ids, candidates[[
         "position_employment", "position_economy", "position_education",
         "position_healthcare", "position_agriculture"]].mean(axis=1)))
+
+    issue_offsets = None
+    issue_importance = None
+    issue_preferences = None
+    if config.support_mode == "synthetic_issue_profile":
+        importance_columns = [f"issue_{issue}" for issue in ISSUES]
+        missing = set(importance_columns).difference(voters.columns)
+        if missing:
+            raise ValueError(f"issue-aware support needs voter issue weights: {sorted(missing)}")
+        issue_importance = voters[importance_columns].apply(
+            pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+        if (not np.isfinite(issue_importance).all() or (issue_importance < 0).any()
+                or (issue_importance.sum(axis=1) <= 0).any()):
+            raise ValueError("voter issue weights must be finite, nonnegative, and sum to > 0")
+        issue_offsets = synthetic_issue_offsets(
+            len(voters), config.synthetic_issue_dispersion,
+            np.random.default_rng(child_seeds["synthetic_issue_profile"]))
+        issue_preferences = np.clip(initial[:, None] + issue_offsets, -1, 1)
     # Social ties as index arrays, for rumour spreading.
     voter_index = pd.Index(voters.voter_id)
     edge_sources = voter_index.get_indexer(edges.source_voter_id)
@@ -299,12 +322,27 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
     smear_strength = np.zeros((len(voters), len(candidate_ids)))
     penalty = np.zeros_like(smear_strength)
     event_utility = np.zeros_like(penalty)  # event signals can raise or lower utility
+
+    def score_support():
+        return candidate_support(
+            opinions, candidates, config.b_pop, config.b_ideol, config.tau,
+            penalty, event_utility, issue_preferences=issue_preferences,
+            issue_importance=issue_importance)
+
+    def apply_neutral_event(event, delta):
+        signal = delta * event["direction"]
+        issue_index = event["issue_index"]
+        if issue_preferences is not None and issue_index is not None:
+            issue_preferences[:, issue_index] = np.clip(
+                issue_preferences[:, issue_index] + signal, -1, 1)
+        else:
+            opinions[:] = np.clip(opinions + signal, -1, 1)
+
     summaries, support_rows, distributions, sampled_rows = [], [], [], []
     # A deterministic systematic ID sample for view state, not an electorate estimate.
     sample_indices = np.linspace(0, len(voters) - 1, min(100, len(voters)), dtype=int)
     bins = np.linspace(-1, 1, 21)
-    support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol,
-                                config.tau, penalty, event_utility)
+    support = score_support()
     applied_event_days = 0
     event_exposures = 0
     event_memory_updates = 0
@@ -317,6 +355,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
         support_history = np.zeros((steps, voter_count, len(candidate_ids)), dtype=np.float32)
         belief_history = np.zeros((steps, voter_count, len(candidate_ids)), dtype=np.int8)
         event_history = np.zeros((steps, voter_count), dtype=bool)
+        issue_preference_history = (None if issue_preferences is None else
+                                    np.zeros((steps, voter_count, len(ISSUES)), dtype=np.float32))
     for day in range(config.days + 1):
         previous = opinions.copy()
         news_today = np.zeros(len(voters), dtype=bool)
@@ -424,7 +464,7 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
-                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                            apply_neutral_event(event, delta)
                         event_memory_updates += 1
                         event_rows.append({"day": day, "event_id": event["event_id"],
                                            "candidate_id": event["associated_candidate_id"],
@@ -440,11 +480,12 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
-                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                            apply_neutral_event(event, delta)
                         applied_event_days += 1
                         event_exposures += len(event["audience"])
                         event_rows.append({"day": day, "event_id": event["event_id"],
                                            "source_type": event.get("source_type"),
+                                           "issue": event["issue"],
                                            "candidate_id": event["associated_candidate_id"],
                                            "audience_size": len(event["audience"]),
                                            "mean_signal_strength": float(strength * event["weights"].mean()),
@@ -459,7 +500,7 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
-                            opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                            apply_neutral_event(event, delta)
                         news_today[event["audience"]] = True
                         event_reminders += 1
                         event_rows.append({"day": day, "event_id": event["event_id"],
@@ -469,9 +510,13 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
             campaign_exposure += campaign_today
             news_exposure += news_today
             penalty = np.where(smear_belief == BELIEVES, smear_strength, 0.0)
-            # (6) Recompute candidate support.
-            support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol,
-                                        config.tau, penalty, event_utility)
+            if issue_preferences is not None:
+                # Social, campaign, and general-event scalar movement shifts
+                # the profile center; issue-specific neutral events touch one axis.
+                issue_preferences[:] = np.clip(
+                    issue_preferences + (opinions - previous)[:, None], -1, 1)
+            # (6) Recompute scalar or issue-aware candidate support.
+            support = score_support()
             for event in events:
                 if (config.lambda_event > 0 and event.get("news_kind") == "poll_release"
                         and event_active_on(event, day)):
@@ -510,6 +555,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
             support_history[day] = support
             belief_history[day] = smear_belief
             event_history[day] = news_today
+            if issue_preference_history is not None:
+                issue_preference_history[day] = issue_preferences
         for candidate_id, value in zip(candidate_ids, support.mean(axis=0)):
             support_rows.append({"day": day, "candidate_id": candidate_id, "mean_support": float(value)})
         leaders = support[sample_indices].argmax(axis=1)
@@ -529,6 +576,10 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
     state = pd.DataFrame({"voter_id": voters.voter_id, "initial_opinion": initial,
                           "final_opinion": opinions, "campaign_exposure": campaign_exposure,
                           "event_exposure": news_exposure, "turnout_probability": turnout_probability})
+    if issue_offsets is not None:
+        for index, issue in enumerate(ISSUES):
+            state[f"synthetic_issue_offset_{issue}"] = issue_offsets[:, index]
+            state[f"final_issue_preference_{issue}"] = issue_preferences[:, index]
     for index, candidate_id in enumerate(candidate_ids):
         state[f"support_{candidate_id}"] = support[:, index]
         state[f"smear_belief_{candidate_id}"] = smear_belief[:, index]
@@ -546,6 +597,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                    "campaign_actions_loaded": len(actions),
                    "campaign_exposures": int(sum(len(recipients[action.action_id]) * action.duration
                                                   for action in actions)),
+                   "campaign_exposure_voter_days": int(campaign_exposure.sum()),
+                   "news_exposure_voter_days": int(news_exposure.sum()),
                    "campaigns_applied": int(sum(action.active_on(day)
                                                   for action in actions for day in range(1, config.days + 1))),
                    "campaign_audiences": audience_summaries,
@@ -572,10 +625,19 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
     metadata = {"synthetic": True, "claim": "Synthetic scenario; not an empirically validated forecast",
                 "scenario": _scenario(config, actions, bool(agents), bool(events)),
                 "config": asdict(config), "master_seed": seed, "child_seeds": child_seeds,
+                "support_mode": config.support_mode,
+                "synthetic_issue_profile_note": (
+                    "Synthetic zero-mean issue offsets around each voter's scalar opinion; "
+                    "not measured voter issue positions."
+                    if issue_offsets is not None else None),
                 "campaign_actions": [asdict(action) for action in actions],
                 "agents": [asdict(agent) for agent in agents],
                 "news_agent": {"random_events_per_day": news_agent.random_events_per_day},
-                "event_model": "Active-day signals apportioned over duration; effects decay by configurable half-life and can be reminded; withdrawals are structural",
+                "event_model": ("Active-day signals apportioned over duration; issue-specific neutral "
+                                "events update that preference dimension in issue-aware mode, general "
+                                "neutral events move scalar opinion, fact-checks update smear beliefs, "
+                                "and poll releases publish sampled support; effects decay by configurable "
+                                "half-life and can be reminded; withdrawals are structural"),
                 "rng": "numpy.default_rng (PCG64); canonical voter/candidate ID order",
                 "view_sample": "Up to 100 systematically spaced canonical voter IDs; internal visualization only, not a representative sample",
                 "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -602,6 +664,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
             "event_exposed": event_history,          # [day, voter]
             "timeline": _timeline(actions, events if config.lambda_event > 0 else [], event_rows),
         }
+        if issue_preference_history is not None:
+            history["issue_preferences"] = issue_preference_history
     return RunResult(pd.DataFrame(summaries), pd.DataFrame(support_rows), pd.DataFrame(distributions),
                      results, state, pd.DataFrame(sampled_rows), turnout, diagnostics, metadata,
                      history)

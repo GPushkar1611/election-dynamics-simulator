@@ -8,8 +8,8 @@ dataset or a claim about real-world event frequency.
 
 The schedule demonstrates the optional behavior fields:
 
-- a directional state shock (`opinion_direction=0.75` shifts exposed voters
-  toward the positive end of the model's opinion scale),
+- a directional healthcare shock (`issue_direction=0.75` shifts only
+  healthcare preference in issue-aware mode; scalar mode moves scalar opinion),
 - one event conditioned on an earlier event,
 - a reminder and finite memory half-life, and
 - a local candidate withdrawal.
@@ -23,6 +23,24 @@ python -m election_sim --config configs/baseline.json `
 ```
 
 Add `--overwrite` to run again into the same folder.
+
+For a multi-seed paired comparison, add `--event-seed-count 30` and choose a
+new output folder. Add `--event-factorial` to separate withdrawals,
+candidate-associated events, and neutral events into matched arms. These
+experiments save per-seed candidate and voter-group summaries. For example:
+
+```powershell
+python -m election_sim --config configs/baseline.json `
+  --events-file event_scenarios/c01_moderate.csv --event-factorial `
+  --event-seed-count 30 --seed 0 --output results/c01_event_factorial
+```
+
+In issue-aware mode, a neutral event on a specific issue updates only that
+preference dimension. `issue_direction` is the preferred directional field;
+older schedules may use `opinion_direction` as a fallback. General events
+continue to move scalar opinion, and candidate-associated events change
+candidate utility directly. In scalar mode, issue-specific neutral events
+retain the older scalar-opinion behavior.
 
 All parameters are synthetic scenario choices. In particular, the opinion
 axis has no empirically established interpretation as a specific ideology;

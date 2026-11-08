@@ -83,9 +83,11 @@ def prepare_events(events: pd.DataFrame, voters: pd.DataFrame, candidate_ids: li
             raise ValueError(f"voters lack attributes needed for event target_group {group!r}") from exc
         issue = row["issue"]
         if issue == "general":
+            issue_index = None
             issue_weight = np.ones(len(voters))
         elif issue in ISSUES:
             column_index = ISSUES.index(issue)
+            issue_index = column_index
             issue_weight = importance[:, column_index] if importance is not None else np.ones(len(voters))
         else:
             raise ValueError(f"event {event_id} has unknown issue {issue!r}")
@@ -101,11 +103,24 @@ def prepare_events(events: pd.DataFrame, voters: pd.DataFrame, candidate_ids: li
         opinion_direction = row.get("opinion_direction")
         opinion_direction = (None if not _present(opinion_direction)
                              else float(opinion_direction))
-        if opinion_direction is not None and (
-                not np.isfinite(opinion_direction) or not -1 <= opinion_direction <= 1):
-            raise ValueError(f"event {event_id} opinion_direction must be in [-1, 1]")
+        issue_direction = row.get("issue_direction")
+        issue_direction = (None if not _present(issue_direction)
+                           else float(issue_direction))
+        for field, value in (("opinion_direction", opinion_direction),
+                             ("issue_direction", issue_direction)):
+            if value is not None and (not np.isfinite(value) or not -1 <= value <= 1):
+                raise ValueError(f"event {event_id} {field} must be in [-1, 1]")
+        if issue_direction is not None and issue_index is None:
+            raise ValueError(f"event {event_id} issue_direction requires a specific issue")
+        if issue_direction is not None and shock_mode != "directional":
+            raise ValueError(f"event {event_id} issue_direction requires shock_mode='directional'")
+        if (issue_index is not None and issue_direction is not None
+                and opinion_direction is not None
+                and not np.isclose(issue_direction, opinion_direction)):
+            raise ValueError(f"event {event_id} issue_direction and opinion_direction conflict")
         if associated_candidate_id is not None and associated_candidate_id in candidate_ids:
-            if shock_mode != "balanced" or opinion_direction is not None:
+            if (shock_mode != "balanced" or opinion_direction is not None
+                    or issue_direction is not None):
                 raise ValueError(f"event {event_id} candidate signals cannot set a neutral shock direction")
             candidate_id = associated_candidate_id
             effect = float(row["candidate_effect"])
@@ -120,9 +135,12 @@ def prepare_events(events: pd.DataFrame, voters: pd.DataFrame, candidate_ids: li
             candidate_id, effect = None, None
             direction = np.zeros(len(voters), dtype=float)
             if shock_mode == "directional":
-                if opinion_direction is None:
-                    raise ValueError(f"event {event_id} directional shock needs opinion_direction")
-                direction[audience] = opinion_direction
+                configured_direction = (issue_direction if issue_direction is not None
+                                        else opinion_direction)
+                if configured_direction is None:
+                    field = "issue_direction" if issue_index is not None else "opinion_direction"
+                    raise ValueError(f"event {event_id} directional shock needs {field}")
+                direction[audience] = configured_direction
             elif len(audience) > 1:
                 # A seeded zero-mean audience direction avoids silently
                 # assigning political meaning to balanced neutral news.
@@ -163,7 +181,9 @@ def prepare_events(events: pd.DataFrame, voters: pd.DataFrame, candidate_ids: li
         reminder_rng = np.random.default_rng([*seed, salt, 2])
         compiled.append({"event_id": event_id, "start_day": int(start), "duration": duration,
                          "intensity": intensity, "credibility": credibility,
-                         "audience": audience, "weights": weights, "candidate_id": candidate_id,
+                         "audience": audience, "weights": weights, "issue": issue,
+                         "issue_index": issue_index, "issue_direction": issue_direction,
+                         "candidate_id": candidate_id,
                          "associated_candidate_id": associated_candidate_id,
                          "source_type": row.get("source_type"),
                          "event_type": (str(row["event_type"]) if _present(row.get("event_type"))

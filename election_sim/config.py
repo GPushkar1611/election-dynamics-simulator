@@ -1,8 +1,8 @@
 """Baseline assumptions implementing plan sections 3.1, 3.2, 3.6 and 3.7.
 
 C01 runs for 30 days; day 0 records the initial state. Defaults are scenario
-assumptions, not fitted estimates. Candidate ideology compresses five issue
-positions to their arithmetic mean. Popularity logits clamp at 1e-6 and
+assumptions, not fitted estimates. Scalar candidate ideology compresses five
+issue positions to their arithmetic mean. Popularity logits clamp at 1e-6 and
 1-1e-6; utility weights and softmax temperature default to 1.
 
 Social strength defaults to 0.2 and sender exponent to 1. Campaign strength
@@ -44,6 +44,8 @@ class SimulationConfig:
     b_pop: float = 1.0
     b_ideol: float = 1.0
     tau: float = 1.0
+    support_mode: str = "scalar"
+    synthetic_issue_dispersion: float = 0.35
     vote_rule: str = "sample"
     lambda_campaign: float = 0.0
     lambda_event: float = 0.2
@@ -64,6 +66,7 @@ class SimulationConfig:
                 raise ValueError(f"{name} must be a positive integer")
         for name in ("lambda_social", "confidence_multiplier", "susceptibility_multiplier",
                      "rho", "b_pop", "b_ideol", "tau", "lambda_campaign", "lambda_event",
+                     "synthetic_issue_dispersion",
                      "event_memory_half_life_days", "event_reminder_probability",
                      "event_reminder_strength", "smear_spread_probability", "poll_noise"):
             value = getattr(self, name)
@@ -84,3 +87,7 @@ class SimulationConfig:
                 raise ValueError("global_confidence must be in [0, 2]")
         if self.vote_rule not in {"sample", "argmax"}:
             raise ValueError("vote_rule must be sample or argmax")
+        if self.support_mode not in {"scalar", "synthetic_issue_profile"}:
+            raise ValueError("support_mode must be scalar or synthetic_issue_profile")
+        if self.synthetic_issue_dispersion > 1:
+            raise ValueError("synthetic_issue_dispersion must be <= 1")

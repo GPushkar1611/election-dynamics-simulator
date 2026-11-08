@@ -6,30 +6,28 @@ Real-data benchmarking is out of scope here. This document covers the multi-agen
 
 ---
 
-## 1. Current status (as of 2026-11-07)
+## 1. Current status (as of 2026-11-08)
 
-All 98 simulator tests and 10 loader tests pass. One C01 run (3,000 voters, 30 days) takes about 2 s.
+The simulator now includes Steps 1–5: full history, candidate agents/campaigns, news-driven turnout, regional spillover, and a matched-seed experiment workflow. On this revision, 140 simulator tests and 11 loader tests pass. The checked-in datasets are synthetic; results are scenario demonstrations, not forecasts.
 
 | Area | Status |
 |---|---|
 | Loader and validation (single constituency, internal edges only) | Done |
 | Directed bounded-confidence DeGroot, synchronous, seeded | Done |
-| Campaigns: `ordinary` and `smear` | Done |
+| Campaigns: `ordinary`, `misleading`, and `smear` | Done |
 | Targeting: uniform, group, high susceptibility, high influence, community | Done |
 | Events: scope, decay, reminders, dependencies, withdrawal, paired shock test | Done |
-| Turnout (propensity only) and voting | Done |
+| Turnout with optional campaign/news exposure coefficients and voting | Done |
 
 ## 2. Gaps (MAS point of view)
 
-1. ~~Candidates are not agents.~~ Fixed in Step 2: candidate agents poll, decide and act within a budget.
-2. ~~No `misleading` message type; smears do not spread.~~ Fixed in Step 2.
-3. **Turnout ignores campaigns and events.** `gamma_mob` and `gamma_event` from plan §3.6 are not connected.
-4. **No multi-seed runner, and no paired campaign comparison.** Only events have `compare_event_shock`.
-5. ~~Single constituency only.~~ Fixed in Step 4: regional social influence with controlled spillover; external region boundaries remain excluded.
-6. ~~Only 100 sampled voters per day are saved.~~ Fixed: use `record_history=True` / `--record-history` (Step 1).
-7. **No visualization or animation code.** `matplotlib` is not in `requirements.txt`.
-8. **The C01 baseline is a landslide.** CAND_0001 gets about 67%, so campaigns won't visibly change the result. The demo needs a closer race.
-9. **`docs/model.md` and `docs/decisions.md` are missing.**
+1. ~~Candidates are not agents; campaign messages lack misleading labels or smear spread.~~ Fixed in Step 2.
+2. ~~Turnout ignores campaigns and events.~~ Step 3 connects cumulative campaign/news exposure to turnout; both coefficients remain zero by default.
+3. ~~No multi-seed runner or paired campaign comparison.~~ Step 5 provides `run_batch`, `compare_campaign`, median and 5th–95th percentile summaries.
+4. ~~Single constituency only.~~ Step 4 adds regional social influence with controlled spillover; external region boundaries remain excluded.
+5. **No visualization or animation code.** `matplotlib` is not in `requirements.txt`.
+6. **No final animation notebook.** Step 5 selected C21 with a 4.33-point top-two support gap; the video and notebook still need to be built around this scenario.
+7. **`docs/model.md` and `docs/decisions.md` are missing.**
 
 ---
 
@@ -41,7 +39,7 @@ Implemented in `election_sim/simulation.py` and tested in `tests/test_history.py
 - Add `record_history: bool = False` to `simulate()`. When it is true, return:
   - `opinions`: float32 `[days+1, N]`
   - `support`: float32 `[days+1, N, C]`
-  - `campaign_exposed`: int `[days+1, N]` (index of the action reaching the voter, -1 for none)
+  - `campaign_exposed`: bool `[days+1, N, A]` (one exposure column per campaign action)
   - `event_exposed`: bool `[days+1, N]`
   - `timeline`: a list of `{day, kind, label, candidate_id}` covering campaign starts and ends, events, smears and fact-checks
 - Save it as `history.npz`, not CSV.
@@ -52,7 +50,7 @@ Implemented in `election_sim/agents/` (`poll.py`, `candidate.py`), `election_sim
 - "scripted" is not a separate strategy: scripted campaigns are still the JSON files in `campaign_actions/`, and they can run alongside agents.
 - Smears are one claim per target candidate: all smears about the same candidate share one belief state.
 
-Still open for D: a fixed-budget comparison of strategies (scripted vs greedy vs go_negative) over many seeds belongs to Step 5 (`run_batch`, `compare_campaign`).
+The Step 5 experiment matrix now compares scripted campaigns with `greedy`, `go_negative`, and `rebut` agents under a common per-candidate contact budget and matched seeds.
 
 - New module `election_sim/agents/candidate.py` with this class:
   ```python
@@ -94,13 +92,20 @@ Cross-boundary coupling applies to social opinions; smear claims remain local.
 - Run agents per constituency. Map party-level campaigns to each constituency's candidate through `party_id`.
 - Results come per constituency, plus a seats table.
 
-### Step 5: Experiments (D, E)
-- Add `run_batch(scenarios, seeds) -> tidy DataFrame` with one row per (scenario, seed, constituency, candidate).
-- Add `compare_campaign()`, modelled on `compare_event_shock`: same seeds, only the campaign differs.
-- Scenario matrix: frozen, social only, with campaigns (ordinary, misleading, smear), with news, all together, strategic agents compared with scripted ones, and equal-budget targeting.
-- Use 3–5 seeds while debugging and 30 for the final results. Report the median and the 5th–95th percentile range.
-- Spillover sweep: 0, 0.05, 0.1, 0.2.
-- **Pick or tune a close race for the demo.** Scan all 21 constituencies' baselines and choose one where the top two candidates are within about 10 points.
+### Step 5: Experiments (D, E) - DONE
+Implemented in `election_sim/experiments.py` (`run_batch`, `compare_campaign`, `summarize_batch`, `build_step5_scenarios`) and `election_sim/step5_cli.py`. Tests: `tests/test_batch_experiments.py`. The runner accepts named scenarios, uses common seed values across arms, and emits one row per (scenario, seed, constituency, candidate). `compare_campaign` changes only the scripted actions and/or candidate agents while keeping config, data, and seed fixed.
+
+The standard matrix includes frozen and social controls; ordinary, misleading, and smear campaigns; social-plus-news and combined runs; scripted versus `greedy`, `go_negative`, and `rebut` agents; and equal-reach uniform, student-group, high-susceptibility, high-influence, and community targeting. Campaign strategy arms share a per-candidate contact-budget cap; targeted arms request the same reach. The core run diagnostics report audience shortfalls and agent budget use, but the current batch CSVs do not retain those per-seed diagnostics, so verify actual contact use separately before interpreting a budget comparison. The workflow first scans all constituency baselines with campaigns disabled and the configured event schedule retained, ranks by top-two mean-support gap, selects the closest one, and runs the matrix over 30 seeds by default. It also runs the regional spillover values 0, 0.05, 0.1, and 0.2 over the same seed list. Reports contain medians and empirical 5th–95th percentile ranges; those ranges describe the requested synthetic runs only.
+
+Completed run: `results/step5_seed0_29/`. The baseline scan used seed 0 across all 21 constituencies and selected C21, where the top-two mean-support gap is 0.0433 (4.33 percentage points). The selected-race matrix has 16 arms and seeds 0–29; the regional sweep covers all 7 constituencies in C21's region at all four spillover values. The output bundle includes per-seed outcomes, summaries, paired effects, and the selection/seed manifest. In this particular scenario, CAND_0061 won all 30 `social_only` runs; this is a property of the synthetic setup, not an election forecast. The closest-race criterion is baseline support, while vote outcomes still vary by seed.
+
+Run from the repository root (use a new output directory):
+
+```powershell
+python -m election_sim.step5_cli --seed 0 --seed-count 30 --output results/step5_seed0_29
+```
+
+Outputs include `baseline_scan.csv`, `per_seed.csv`, `summary.csv`, `paired_effects.csv`, `spillover_per_seed.csv`, `spillover_summary.csv`, and `manifest.json`. The manifest records the selected constituency and whether its baseline support gap is within 10 percentage points. If no baseline is that close, the workflow selects the closest available and reports that fact; it does not silently tune candidate popularity.
 
 ### Step 6: `election_sim/viz.py` and the final video
 **Layout (k-means style):**
@@ -183,7 +188,8 @@ Not needed for the core model: DeGroot and bounded-confidence dynamics model *de
 - [x] `misleading` type and smear spread, with tests
 - [x] `NewsAgent` with fact-check and poll release; mobilization connected
 - [x] `simulate_region` with spillover sweep
-- [ ] `run_batch` and `compare_campaign`, 30-seed results
+- [x] `run_batch`, `compare_campaign`, the Step 5 scenario matrix and 30-seed results
+- [x] Baseline scan across all constituencies and closest-race selection
 - [ ] `viz.py` renders an MP4 of several constituencies with campaign and event overlays
 - [ ] `notebooks/final_simulation.ipynb` runs top to bottom on a clean install
 - [ ] `docs/model.md`, `docs/decisions.md`, report

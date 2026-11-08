@@ -9,7 +9,7 @@ import pandas as pd
 from election_sim import SimulationConfig, simulate
 from election_sim.dynamics import social_step
 from election_sim.network import build_incoming
-from election_sim.support import ISSUES, candidate_support
+from election_sim.support import ISSUES, candidate_support, synthetic_issue_offsets
 from election_sim.voting import election_result
 
 
@@ -128,6 +128,38 @@ class SupportTests(unittest.TestCase):
         candidates.loc[1, [f"position_{issue}" for issue in ISSUES]] = 0.
         np.testing.assert_allclose(candidate_support(np.array([0.]), candidates), [[0.5, 0.5]])
 
+    def test_issue_aware_fit_uses_voter_specific_issue_weights(self):
+        candidates = fixture()["candidates"]
+        candidates.loc[0, [f"position_{issue}" for issue in ISSUES]] = [1., -1., 0., 0., 0.]
+        candidates.loc[1, [f"position_{issue}" for issue in ISSUES]] = [-1., 1., 0., 0., 0.]
+        preferences = np.array([[0.8, 0.8, 0., 0., 0.],
+                                [0.8, 0.8, 0., 0., 0.]])
+        importance = np.array([[0.9, 0.1, 0., 0., 0.],
+                               [0.1, 0.9, 0., 0., 0.]])
+        support = candidate_support(np.zeros(2), candidates, b_ideol=1.0, tau=0.2,
+                                    issue_preferences=preferences,
+                                    issue_importance=importance)
+        self.assertGreater(support[0, 0], support[0, 1])
+        self.assertGreater(support[1, 1], support[1, 0])
+
+    def test_issue_aware_fit_rejects_missing_or_zero_importance(self):
+        candidates = fixture()["candidates"]
+        prefs = np.zeros((1, len(ISSUES)))
+        with self.assertRaisesRegex(ValueError, "supplied together"):
+            candidate_support(np.zeros(1), candidates, issue_preferences=prefs)
+        with self.assertRaisesRegex(ValueError, "positive total"):
+            candidate_support(np.zeros(1), candidates, issue_preferences=prefs,
+                              issue_importance=np.zeros_like(prefs))
+
+    def test_synthetic_issue_offsets_are_seeded_bounded_and_zero_mean(self):
+        first = synthetic_issue_offsets(8, 0.4, np.random.default_rng(11))
+        second = synthetic_issue_offsets(8, 0.4, np.random.default_rng(11))
+        np.testing.assert_array_equal(first, second)
+        np.testing.assert_allclose(first.mean(axis=1), 0., atol=1e-12)
+        self.assertLessEqual(np.abs(first).max(), 0.4)
+        np.testing.assert_array_equal(
+            synthetic_issue_offsets(2, 0., np.random.default_rng(11)), np.zeros((2, 5)))
+
 
 class VotingTests(unittest.TestCase):
     def vote(self, propensity, rule="sample"):
@@ -229,11 +261,55 @@ class SimulationTests(unittest.TestCase):
 
     def test_invalid_config_and_seed(self):
         for kwargs in ({"days": 0}, {"days": True}, {"lambda_social": 2}, {"tau": 0},
-                       {"rho": float("nan")}, {"global_confidence": 3}, {"vote_rule": "bad"}):
+                       {"rho": float("nan")}, {"global_confidence": 3}, {"vote_rule": "bad"},
+                       {"support_mode": "unknown"}, {"synthetic_issue_dispersion": 1.1}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 SimulationConfig(**kwargs)
         with self.assertRaises(ValueError):
             simulate(SimulationConfig(), fixture(), -1)
+
+    def test_issue_aware_mode_requires_weights_and_saves_synthetic_profile(self):
+        config = SimulationConfig(days=1, lambda_social=0,
+                                  support_mode="synthetic_issue_profile",
+                                  synthetic_issue_dispersion=0.3)
+        data = fixture()
+        with self.assertRaisesRegex(ValueError, "needs voter issue weights"):
+            simulate(config, data, 7)
+        for issue in ISSUES:
+            data["voters"][f"issue_{issue}"] = 1.0 / len(ISSUES)
+        first = simulate(config, data, 7)
+        second = simulate(config, data, 7)
+        pd.testing.assert_frame_equal(first.final_state, second.final_state)
+        self.assertEqual(first.metadata["support_mode"], "synthetic_issue_profile")
+        self.assertIn("not measured", first.metadata["synthetic_issue_profile_note"])
+        for issue in ISSUES:
+            self.assertIn(f"synthetic_issue_offset_{issue}", first.final_state)
+            self.assertIn(f"final_issue_preference_{issue}", first.final_state)
+
+    def test_scalar_mode_remains_default_and_has_no_synthetic_profile_columns(self):
+        result = simulate(SimulationConfig(days=1, lambda_social=0), fixture(), 7)
+        self.assertEqual(result.metadata["support_mode"], "scalar")
+        self.assertFalse(any(column.startswith("synthetic_issue_offset_")
+                             for column in result.final_state))
+
+    def test_explicit_issue_state_moves_with_scalar_social_opinion(self):
+        data = fixture()
+        for issue in ISSUES:
+            data["voters"][f"issue_{issue}"] = 0.2
+        config = SimulationConfig(days=1, lambda_social=1,
+                                  support_mode="synthetic_issue_profile",
+                                  synthetic_issue_dispersion=0.4)
+        result = simulate(config, data, 19)
+        state = result.final_state.set_index("voter_id")
+        for voter_id, initial_opinion in zip(data["voters"].voter_id,
+                                             data["voters"].initial_opinion):
+            row = state.loc[voter_id]
+            for issue in ISSUES:
+                initial_preference = np.clip(
+                    initial_opinion + row[f"synthetic_issue_offset_{issue}"], -1, 1)
+                expected = np.clip(initial_preference + row.final_opinion - initial_opinion,
+                                   -1, 1)
+                self.assertAlmostEqual(row[f"final_issue_preference_{issue}"], expected)
 
     def test_mixed_constituency_and_nonfinite_inputs_rejected(self):
         for column, value in (("constituency_id", 2), ("initial_opinion", float("nan")),
