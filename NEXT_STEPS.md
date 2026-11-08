@@ -72,7 +72,10 @@ Still open for D: a fixed-budget comparison of strategies (scripted vs greedy vs
 - **`misleading` type:** same update as `ordinary`, but the message position is distorted toward the audience, e.g. `q = platform + distortion * (audience_mean - platform)`. Keep the truth label separate from the mechanics.
 - **Smear spread:** give each voter a state `unaware / believes / rejects`. Belief passes along edges with probability `p * edge_weight * credibility`. The utility penalty applies only while the voter believes the claim.
 
-### Step 3: News agent and turnout (C)
+### Step 3: News agent and turnout (C) - DONE
+Implemented in `election_sim/news.py`, `simulation.py` and `voting.py`.
+Usage, assumptions and runnable example: `event_scenarios/STEP_3.md`.
+Tests: `tests/test_news.py`. Strategic voting remains future work.
 - Wrap `events.py` in a `NewsAgent` that can read the CSV schedule and also generate seeded random events, for example a Poisson number per day.
 - New event types:
   - `fact_check`: moves exposed believers of a smear to "rejects". Credibility sets the acceptance probability.
@@ -174,7 +177,7 @@ Not needed for the core model: DeGroot and bounded-confidence dynamics model *de
 - [x] `simulate(..., record_history=True)` returns the full arrays, with a test
 - [x] At least 3 candidate strategies, polls with noise, budgets enforced
 - [x] `misleading` type and smear spread, with tests
-- [ ] `NewsAgent` with fact-check and poll release; mobilization connected
+- [x] `NewsAgent` with fact-check and poll release; mobilization connected
 - [ ] `simulate_region` with spillover sweep
 - [ ] `run_batch` and `compare_campaign`, 30-seed results
 - [ ] `viz.py` renders an MP4 of several constituencies with campaign and event overlays

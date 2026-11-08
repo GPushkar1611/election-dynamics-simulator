@@ -19,10 +19,11 @@ from .campaign.effects import (BELIEVES, GROUP_MATCHERS, REJECTS, UNAWARE, actio
 from .campaign.models import CampaignAction, check_actions
 from .config import SimulationConfig
 from .dynamics import social_step
-from .events import active_on as event_active_on, prepare_events
+from .events import active_on as event_active_on
 from .network import build_incoming
+from .news import NewsAgent
 from .support import candidate_support
-from .voting import election_result
+from .voting import election_result, mobilized_propensity
 
 
 @dataclass
@@ -91,7 +92,7 @@ def _timeline(actions: list[CampaignAction], events: list[dict],
         if event["occurs"]:
             timeline.append({"day": event["start_day"],
                              "end_day": event["start_day"] + event["duration"] - 1,
-                             "kind": "event", "id": event["event_id"],
+                             "kind": event.get("news_kind") or "event", "id": event["event_id"],
                              "label": event["event_type"] or event["event_id"],
                              "candidate_id": event["associated_candidate_id"]})
     for row in event_rows:
@@ -188,12 +189,15 @@ def _audience_summary(action: CampaignAction, selected: np.ndarray, voters: pd.D
 def simulate(config: SimulationConfig, data: dict, seed: int = 42,
              campaign_actions: list[CampaignAction] | None = None,
              record_history: bool = False,
-             agents: list[CandidateAgent] | None = None) -> RunResult:
+             agents: list[CandidateAgent] | None = None,
+             news_agent: NewsAgent | None = None) -> RunResult:
     """Run one synthetic election.
 
     campaign_actions: scripted actions fixed in advance (campaign_actions/*.json).
     agents: CandidateAgents that read a poll on their decision days and choose
         actions during the run (campaign_agents/*.json).
+    news_agent: optional CSV/DataFrame scheduler; otherwise uses data events and
+        config.random_news_rate. Public polls are saved in diagnostics.
     record_history: also keep every voter's daily state (RunResult.history).
         Recording only copies values; it never changes the simulation.
 
@@ -240,10 +244,12 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
     child_seeds = _child_seeds(seed)
     turnout_rng, vote_rng, poll_rng, spread_rng = (
         np.random.default_rng(child_seeds[name]) for name in ("turnout", "voting", "polls", "spread"))
-    events = prepare_events(data.get("events", pd.DataFrame()), voters, candidate_ids,
-                            child_seeds["events"], config.days, config.constituency_id,
-                            config.event_memory_half_life_days,
-                            config.event_reminder_probability)
+    news_agent = news_agent or NewsAgent(random_events_per_day=config.random_news_rate)
+    events = news_agent.prepare(data.get("events", pd.DataFrame()), voters, candidate_ids,
+                                child_seeds["events"], config)
+    campaign_exposure = np.zeros(len(voters), dtype=int)
+    news_exposure = np.zeros(len(voters), dtype=int)
+    public_polls = []
     platforms = dict(zip(candidate_ids, candidates[[
         "position_employment", "position_economy", "position_education",
         "position_healthcare", "position_agriculture"]].mean(axis=1)))
@@ -296,6 +302,8 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
         event_history = np.zeros((steps, voter_count), dtype=bool)
     for day in range(config.days + 1):
         previous = opinions.copy()
+        news_today = np.zeros(len(voters), dtype=bool)
+        campaign_today = np.zeros(len(voters), dtype=bool)
         if day:
             # (1) Agents read a poll of yesterday's support and choose actions.
             deciding = [agent for agent in agents if agent.decides_on(day)]
@@ -333,6 +341,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                 if not action.active_on(day):
                     continue
                 chosen = recipients[action.action_id]
+                campaign_today[chosen] = True
                 if action.message_type == "smear":
                     target = candidate_ids.index(action.target_candidate_id)
                     smear_strength = apply_smear(smear_strength, susceptibility, chosen, target,
@@ -355,6 +364,24 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
             if config.lambda_event > 0:
                 for event in events:
                     if not event["occurs"]:
+                        continue
+                    if event.get("news_kind"):
+                        if event_active_on(event, day):
+                            audience = event["audience"]
+                            news_today[audience] = True
+                            applied_event_days += 1
+                            event_exposures += len(audience)
+                            accepted = 0
+                            if event["news_kind"] == "fact_check":
+                                target = candidate_ids.index(event["candidate_id"])
+                                believers = audience[smear_belief[audience, target] == BELIEVES]
+                                corrected = believers[event["news_rng"].random(len(believers)) < event["credibility"]]
+                                smear_belief[corrected, target] = REJECTS
+                                accepted = len(corrected)
+                            event_rows.append({"day": day, "event_id": event["event_id"],
+                                "candidate_id": event["associated_candidate_id"],
+                                "effect": event["news_kind"], "audience_size": len(audience),
+                                "accepted": accepted})
                         continue
                     candidate_id = event["candidate_id"]
                     if (event["structural_effect"] == "candidate_withdrawal"
@@ -387,6 +414,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                                            "effect": "memory_decay"})
 
                     if event_active_on(event, day):
+                        news_today[event["audience"]] = True
                         strength = (config.lambda_event * event["intensity"] * event["credibility"]
                                     / event["duration"])
                         delta = strength * event["weights"]
@@ -415,14 +443,25 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                                 delta * event["candidate_effect"])
                         else:
                             opinions = np.clip(opinions + delta * event["direction"], -1, 1)
+                        news_today[event["audience"]] = True
                         event_reminders += 1
                         event_rows.append({"day": day, "event_id": event["event_id"],
                                            "candidate_id": event["associated_candidate_id"],
                                            "effect": "reminder"})
 
+            campaign_exposure += campaign_today
+            news_exposure += news_today
+            penalty = np.where(smear_belief == BELIEVES, smear_strength, 0.0)
             # (6) Recompute candidate support.
             support = candidate_support(opinions, candidates, config.b_pop, config.b_ideol,
                                         config.tau, penalty, event_utility)
+            for event in events:
+                if (config.lambda_event > 0 and event.get("news_kind") == "poll_release"
+                        and event_active_on(event, day)):
+                    published = run_poll(support, voters, candidate_ids, event["news_rng"], day,
+                                         config.poll_sample_size, config.poll_noise)
+                    public_polls.append({**published, "event_id": event["event_id"],
+                                         "announcement": "public"})
         # Counts reflect the state logged for this day; the next update uses it.
         eligible = int((np.abs(opinions[graph.sources] - opinions[graph.targets]) <=
                         confidence[graph.targets]).sum())
@@ -453,9 +492,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
             opinion_history[day] = opinions
             support_history[day] = support
             belief_history[day] = smear_belief
-            if config.lambda_event > 0:  # with zero strength, events reach nobody
-                for event in active_events:
-                    event_history[day, event["audience"]] = True
+            event_history[day] = news_today
         for candidate_id, value in zip(candidate_ids, support.mean(axis=0)):
             support_rows.append({"day": day, "candidate_id": candidate_id, "mean_support": float(value)})
         leaders = support[sample_indices].argmax(axis=1)
@@ -467,11 +504,14 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
         for left, right, count in zip(bins[:-1], bins[1:], counts):
             distributions.append({"day": day, "bin_left": float(left), "bin_right": float(right),
                                   "count": int(count)})
-    results, turnout = election_result(voters.turnout_propensity.to_numpy(), support, candidate_ids,
+    turnout_probability = mobilized_propensity(voters.turnout_propensity.to_numpy(),
+        campaign_exposure, news_exposure, config.gamma_mob, config.gamma_event)
+    results, turnout = election_result(turnout_probability, support, candidate_ids,
                                        turnout_rng, vote_rng, config.vote_rule)
     results["final_mean_support"] = support.mean(axis=0)
     state = pd.DataFrame({"voter_id": voters.voter_id, "initial_opinion": initial,
-                          "final_opinion": opinions})
+                          "final_opinion": opinions, "campaign_exposure": campaign_exposure,
+                          "event_exposure": news_exposure, "turnout_probability": turnout_probability})
     for index, candidate_id in enumerate(candidate_ids):
         state[f"support_{candidate_id}"] = support[:, index]
         state[f"smear_belief_{candidate_id}"] = smear_belief[:, index]
@@ -494,7 +534,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                    "campaign_audiences": audience_summaries,
                    "agent_decisions": decisions,
                    "agent_budget_left": budget_left,
-                   "polls": polls,
+                   "polls": polls, "public_polls": public_polls,
                    "smear_believers": {candidate_id: int((smear_belief[:, index] == BELIEVES).sum())
                                        for index, candidate_id in enumerate(candidate_ids)},
                    "smear_rejecters": {candidate_id: int((smear_belief[:, index] == REJECTS).sum())
@@ -517,6 +557,7 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
                 "config": asdict(config), "master_seed": seed, "child_seeds": child_seeds,
                 "campaign_actions": [asdict(action) for action in actions],
                 "agents": [asdict(agent) for agent in agents],
+                "news_agent": {"random_events_per_day": news_agent.random_events_per_day},
                 "event_model": "Active-day signals apportioned over duration; effects decay by configurable half-life and can be reminded; withdrawals are structural",
                 "rng": "numpy.default_rng (PCG64); canonical voter/candidate ID order",
                 "view_sample": "Up to 100 systematically spaced canonical voter IDs; internal visualization only, not a representative sample",

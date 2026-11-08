@@ -39,3 +39,21 @@ def election_result(propensity: np.ndarray, support: np.ndarray,
     assert int(counts.sum()) == turnout
     assert turnout + summary["abstentions"] == len(p)
     return results, summary
+
+
+def mobilized_propensity(propensity, campaign_exposure, event_exposure, gamma_mob=0., gamma_event=0.):
+    """Exposure is cumulative voter-days, counting each channel once per day.
+
+    Preserve exact baseline probabilities when coefficients are zero; for
+    nonzero shifts clamp baseline endpoints to 1e-6 before taking logits.
+    """
+    p = np.asarray(propensity, dtype=float)
+    if not np.isfinite(p).all() or ((p < 0) | (p > 1)).any():
+        raise ValueError("propensity must be finite and in [0, 1]")
+    shift = gamma_mob * np.asarray(campaign_exposure) + gamma_event * np.asarray(event_exposure)
+    if shift.shape != p.shape or not np.isfinite(shift).all():
+        raise ValueError("mobilization shift must be finite and match propensity")
+    clipped = np.clip(p, 1e-6, 1 - 1e-6)
+    z = np.log(clipped) - np.log1p(-clipped) + shift
+    adjusted = np.exp(-np.logaddexp(0., -z))
+    return np.where(shift == 0, p, adjusted)

@@ -17,7 +17,9 @@ candidate agents that read polls of `poll_sample_size` voters with
 `poll_noise`. Smear rumours spread along social ties only when
 `smear_spread_probability` > 0 (default 0: only direct recipients believe).
 
-Baseline turnout uses the supplied propensity without mobilization. Voting
+Turnout uses the supplied propensity by default; gamma_mob and gamma_event
+optionally shift its logit by cumulative campaign/news exposure voter-days.
+random_news_rate defaults to zero (no generated news). Voting
 samples final candidate support using a separate RNG. Canonical ID ordering
 defines random-draw assignment and argmax tie breaking. Election ties list
 all tied winners. Zero turnout has no winner and zero vote shares.
@@ -51,6 +53,9 @@ class SimulationConfig:
     smear_spread_probability: float = 0.0
     poll_sample_size: int = 300
     poll_noise: float = 0.02
+    gamma_mob: float = 0.0
+    gamma_event: float = 0.0
+    random_news_rate: float = 0.0
 
     def __post_init__(self):
         for name in ("constituency_id", "days", "poll_sample_size"):
@@ -64,6 +69,11 @@ class SimulationConfig:
             value = getattr(self, name)
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
+        for name in ("gamma_mob", "gamma_event", "random_news_rate"):
+            if not math.isfinite(getattr(self, name)):
+                raise ValueError(f"{name} must be finite")
+        if self.random_news_rate < 0:
+            raise ValueError("random_news_rate must be nonnegative")
         if self.lambda_social > 1 or self.lambda_campaign > 1 or self.lambda_event > 1 or self.tau == 0:
             raise ValueError("lambda_social, lambda_campaign and lambda_event must be <= 1 and tau must be > 0")
         if (self.event_reminder_probability > 1 or self.event_reminder_strength > 1

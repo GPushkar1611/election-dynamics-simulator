@@ -144,7 +144,7 @@ def validate_data(voters: pd.DataFrame, social_network: pd.DataFrame,
         if "event_type" in events:
             allowed_types = {"Manifesto announcement", "Campaign rally", "Policy announcement", "Controversy",
                              "Economic development", "Employment announcement", "Agricultural issue",
-                             "Healthcare issue", "Education initiative", "External economic shock", "Other"}
+                             "Healthcare issue", "Education initiative", "External economic shock", "Other", "fact_check", "poll_release", "random_news"}
             if not events.event_type.isin(allowed_types).all():
                 problems.append("events.event_type contains an unknown or missing category")
         for col in ("intensity", "credibility"):

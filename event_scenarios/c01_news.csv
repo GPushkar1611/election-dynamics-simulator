@@ -1,0 +1,4 @@
+event_id,region_id,constituency_id,event_day,source_type,event_type,issue,candidate_id,intensity,credibility,duration,target_group,candidate_effect
+NEWS_CHECK,1,1,18,News,fact_check,general,CAND_0003,1,0.9,1,General,0
+NEWS_SHOCK,1,1,20,News,Other,general,,0.5,0.8,1,General,
+NEWS_POLL,1,1,25,News,poll_release,general,,1,1,1,General,
