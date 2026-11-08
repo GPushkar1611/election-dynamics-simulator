@@ -1,0 +1,22 @@
+{
+  "constituency_id": 1,
+  "days": 30,
+  "lambda_social": 0.2,
+  "lambda_campaign": 0.2,
+  "lambda_event": 0.2,
+  "confidence_multiplier": 1.0,
+  "global_confidence": null,
+  "susceptibility_multiplier": 1.0,
+  "rho": 1.0,
+  "b_pop": 1.0,
+  "b_ideol": 1.0,
+  "tau": 1.0,
+  "vote_rule": "sample",
+  "smear_spread_probability": 0.05,
+  "poll_sample_size": 300,
+  "poll_noise": 0.02,
+  "gamma_mob": 0.03,
+  "gamma_event": 0.02,
+  "random_news_rate": 0.1,
+  "strategic_voting": 1.0
+}

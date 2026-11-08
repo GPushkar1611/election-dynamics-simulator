@@ -50,7 +50,9 @@ durations, decay and reminders retain their existing behavior.
   using poll_sample_size/poll_noise is published to everyone. The entire
   electorate receives the same announcement; credibility does not restrict
   delivery. The poll is recorded with day, event ID, shares and public status.
-  Strategic voting is future work: publication itself does not change support.
+  By default publication does not change support. With `strategic_voting` > 0,
+  voters desert candidates the published poll shows cannot win; see
+  `STRATEGIC_VOTING.md`.
 - Announcement types do not decay, trigger reminders, or withdraw candidates.
   Duration greater than one repeats the announcement each active day.
 - lambda_event=0 disables all news effects, announcements and news exposure.

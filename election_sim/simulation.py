@@ -22,6 +22,7 @@ from .dynamics import social_step
 from .events import active_on as event_active_on
 from .network import build_incoming
 from .news import NewsAgent
+from .strategic import strategic_adjustment, viable_candidates
 from .support import ISSUES, candidate_support, synthetic_issue_offsets
 from .voting import election_result, mobilized_propensity
 
@@ -322,11 +323,12 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
     smear_strength = np.zeros((len(voters), len(candidate_ids)))
     penalty = np.zeros_like(smear_strength)
     event_utility = np.zeros_like(penalty)  # event signals can raise or lower utility
+    strategic_utility = np.zeros_like(penalty)  # set by public polls; see strategic.py
 
     def score_support():
         return candidate_support(
             opinions, candidates, config.b_pop, config.b_ideol, config.tau,
-            penalty, event_utility, issue_preferences=issue_preferences,
+            penalty, event_utility + strategic_utility, issue_preferences=issue_preferences,
             issue_importance=issue_importance)
 
     def apply_neutral_event(event, delta):
@@ -524,6 +526,18 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                                          config.poll_sample_size, config.poll_noise)
                     public_polls.append({**published, "event_id": event["event_id"],
                                          "announcement": "public"})
+                    if config.strategic_voting > 0:
+                        # The poll is now common knowledge: voters who received it
+                        # desert candidates it shows cannot win (strategic.py).
+                        viable = viable_candidates(published["shares"], candidate_ids)
+                        before = support.argmax(axis=1)
+                        strategic_utility[event["audience"]] = strategic_adjustment(
+                            viable, config.strategic_voting)
+                        support = score_support()
+                        public_polls[-1]["non_viable"] = [
+                            candidate for candidate, ok in zip(candidate_ids, viable) if not ok]
+                        public_polls[-1]["switched_top_choice"] = int(
+                            (support.argmax(axis=1) != before).sum())
         # Counts reflect the state logged for this day; the next update uses it.
         eligible = int((np.abs(opinions[graph.sources] - opinions[graph.targets]) <=
                         confidence[graph.targets]).sum())

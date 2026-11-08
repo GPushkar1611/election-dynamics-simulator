@@ -73,7 +73,7 @@ The Step 5 experiment matrix now compares scripted campaigns with `greedy`, `go_
 ### Step 3: News agent and turnout (C) - DONE
 Implemented in `election_sim/news.py`, `simulation.py` and `voting.py`.
 Usage, assumptions and runnable example: `event_scenarios/STEP_3.md`.
-Tests: `tests/test_news.py`. Strategic voting remains future work.
+Tests: `tests/test_news.py`. Strategic voting after public polls (epistemic logic) is now implemented: `election_sim/strategic.py`, documented in `event_scenarios/STRATEGIC_VOTING.md`, tested in `tests/test_strategic.py`.
 - Wrap `events.py` in a `NewsAgent` that can read the CSV schedule and also generate seeded random events, for example a Poisson number per day.
 - New event types:
   - `fact_check`: moves exposed believers of a smear to "rejects". Credibility sets the acceptance probability.
@@ -170,7 +170,7 @@ Not needed for the core model: DeGroot and bounded-confidence dynamics model *de
    - Candidates only know poll results. An internal poll is private knowledge of one candidate.
    - A published poll is a public announcement, so its result becomes common knowledge.
    - Strategy depends on what each agent knows, and what it knows others know.
-3. **Strategic voting through common knowledge.**
+3. **Strategic voting through common knowledge.** *(Implemented: `strategic_voting` config, see `event_scenarios/STRATEGIC_VOTING.md`.)*
    - If a published poll makes it common knowledge that C2 cannot win, C2 supporters defect to their second choice (Duverger's law). Without a published poll, nobody defects.
    - This depends on higher-order beliefs: "I know that everyone knows C2 is losing."
    - The same mechanism supports stretch goal 2: early-phase results, once publicly announced, become common knowledge that shapes later phases.

@@ -143,6 +143,10 @@ python -m election_sim --config configs/agents.json --agents campaign_agents/c01
 
 The command prints every agent decision. See `campaign_agents/README.md`. Step 2 also added the `misleading` message type and optional smear spreading through the social network (`smear_spread_probability`); see `campaign_actions/README.md`. With no agents and spreading off, results are identical to earlier versions.
 
+## Strategic voting (epistemic logic)
+
+With `strategic_voting` > 0, a public `poll_release` makes the poll common knowledge, and voters lower their utility for candidates outside the poll's top two. Candidate agents' private polls never trigger this. See `event_scenarios/STRATEGIC_VOTING.md`.
+
 ## What remains
 
 The voter/social-network baseline, ordinary/misleading/smear campaigns, targeted recipients, candidate agents, and optional full history are implemented. Events apply on schedule and scope; candidate-associated events change candidate utility, while neutral issue-specific events update only their issue dimension in issue-aware mode. General neutral events still move scalar opinion. Paired event, factorial event, and issue-support sensitivity runners are available. Issue-aware support uses generated voter issue profiles because the data has priorities but no measured issue stances; see `ISSUE_PREFERENCE_STATE.md`. These remain synthetic mechanisms, not fitted behavioral parameters. Unfinished work includes named semantics and calibration for issue coordinates and shock directions, turnout response, multi-constituency spillover, broader batch experiments, and dashboard/report work. Community labels are inferred from the network; they are not present in voter records. The original plan also calls for model/data-profile documentation and clean-environment reproduction.

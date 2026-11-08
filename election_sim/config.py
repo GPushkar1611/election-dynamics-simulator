@@ -58,6 +58,7 @@ class SimulationConfig:
     gamma_mob: float = 0.0
     gamma_event: float = 0.0
     random_news_rate: float = 0.0
+    strategic_voting: float = 0.0  # 0 = sincere voting; see strategic.py
 
     def __post_init__(self):
         for name in ("constituency_id", "days", "poll_sample_size"):
@@ -68,7 +69,8 @@ class SimulationConfig:
                      "rho", "b_pop", "b_ideol", "tau", "lambda_campaign", "lambda_event",
                      "synthetic_issue_dispersion",
                      "event_memory_half_life_days", "event_reminder_probability",
-                     "event_reminder_strength", "smear_spread_probability", "poll_noise"):
+                     "event_reminder_strength", "smear_spread_probability", "poll_noise",
+                     "strategic_voting"):
             value = getattr(self, name)
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be finite and nonnegative")
