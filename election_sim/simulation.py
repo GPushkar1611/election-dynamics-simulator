@@ -195,9 +195,11 @@ def simulate(config: SimulationConfig, data: dict, seed: int = 42,
              campaign_actions: list[CampaignAction] | None = None,
              record_history: bool = False,
              agents: list[CandidateAgent] | None = None,
-             news_agent: NewsAgent | None = None) -> RunResult:
+             news_agent: NewsAgent | None = None,
+             on_day=None) -> RunResult:
     """Run one constituency; regional runs share this same daily engine."""
-    engine = _simulate_steps(config, data, seed, campaign_actions, record_history, agents, news_agent)
+    engine = _simulate_steps(config, data, seed, campaign_actions, record_history, agents,
+                             news_agent, on_day)
     try:
         snapshot = next(engine)
         while True:
@@ -212,7 +214,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
              campaign_actions: list[CampaignAction] | None = None,
              record_history: bool = False,
              agents: list[CandidateAgent] | None = None,
-             news_agent: NewsAgent | None = None) -> RunResult:
+             news_agent: NewsAgent | None = None,
+             on_day=None) -> RunResult:
     """Run one synthetic election.
 
     campaign_actions: scripted actions fixed in advance (campaign_actions/*.json).
@@ -361,6 +364,9 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                                     np.zeros((steps, voter_count, len(ISSUES)), dtype=np.float32))
     for day in range(config.days + 1):
         previous = opinions.copy()
+        source_deltas = ({name: np.zeros(len(voters), dtype=float)
+                          for name in ("social", "campaign", "events")}
+                         if on_day is not None else None)
         news_today = np.zeros(len(voters), dtype=bool)
         campaign_today = np.zeros(len(voters), dtype=bool)
         if day:
@@ -393,7 +399,10 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                 actions.sort(key=lambda item: item.action_id)
 
             # (2) Voters influence each other.
+            social_before = opinions.copy()
             opinions = yield (opinions.copy(), susceptibility, confidence, graph)
+            if source_deltas is not None:
+                source_deltas["social"] = opinions - social_before
 
             # (3) Campaign messages, in action_id order.
             for action in actions:
@@ -407,10 +416,13 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                                                  action, config.lambda_campaign)
                     smear_belief[chosen, target] = BELIEVES
                 else:  # ordinary or misleading
+                    campaign_before = opinions.copy()
                     position = message_position(action, float(platforms[action.candidate_id]),
                                                 opinions, chosen)
                     opinions = apply_ordinary(opinions, susceptibility, chosen, position,
                                               action, config.lambda_campaign)
+                    if source_deltas is not None:
+                        source_deltas["campaign"] += opinions - campaign_before
 
             # (4) Smear rumours spread along social ties.
             if config.smear_spread_probability > 0:
@@ -462,11 +474,14 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                         old = event["contribution"].copy()
                         event["contribution"] *= decay
                         delta = event["contribution"] - old
+                        event_before = opinions.copy() if source_deltas is not None else None
                         if candidate_id is not None:
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
                             apply_neutral_event(event, delta)
+                        if source_deltas is not None:
+                            source_deltas["events"] += opinions - event_before
                         event_memory_updates += 1
                         event_rows.append({"day": day, "event_id": event["event_id"],
                                            "candidate_id": event["associated_candidate_id"],
@@ -478,11 +493,14 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                                     / event["duration"])
                         delta = strength * event["weights"]
                         event["contribution"] += delta
+                        event_before = opinions.copy() if source_deltas is not None else None
                         if candidate_id is not None:
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
                             apply_neutral_event(event, delta)
+                        if source_deltas is not None:
+                            source_deltas["events"] += opinions - event_before
                         applied_event_days += 1
                         event_exposures += len(event["audience"])
                         event_rows.append({"day": day, "event_id": event["event_id"],
@@ -498,11 +516,14 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                                     * config.event_reminder_strength)
                         delta = strength * event["weights"]
                         event["contribution"] += delta
+                        event_before = opinions.copy() if source_deltas is not None else None
                         if candidate_id is not None:
                             event_utility[:, candidate_ids.index(candidate_id)] += (
                                 delta * event["candidate_effect"])
                         else:
                             apply_neutral_event(event, delta)
+                        if source_deltas is not None:
+                            source_deltas["events"] += opinions - event_before
                         news_today[event["audience"]] = True
                         event_reminders += 1
                         event_rows.append({"day": day, "event_id": event["event_id"],
@@ -578,6 +599,17 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
             sampled_rows.append({"day": day, "voter_id": voters.voter_id.iloc[index],
                                  "opinion": float(opinions[index]),
                                  "leading_candidate_id": candidate_ids[leader]})
+        if on_day is not None:
+            on_day({"day": day, "constituency_id": config.constituency_id,
+                    "voter_ids": voters.voter_id.to_numpy(dtype=str).copy(),
+                    "opinions": opinions.copy(), "support": support.copy(),
+                    "source_deltas": {key: value.copy() for key, value in source_deltas.items()},
+                    "summary": summaries[-1].copy(),
+                    "candidates": [{"candidate_id": candidate_id,
+                                    "mean_support": float(support[:, index].mean())}
+                                   for index, candidate_id in enumerate(candidate_ids)],
+                    "actions": [row.copy() for row in decisions if row["day"] == day],
+                    "events": [row.copy() for row in event_rows if row["day"] == day]})
         counts, _ = np.histogram(opinions, bins=bins)
         for left, right, count in zip(bins[:-1], bins[1:], counts):
             distributions.append({"day": day, "bin_left": float(left), "bin_right": float(right),
