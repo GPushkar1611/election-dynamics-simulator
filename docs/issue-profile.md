@@ -1,5 +1,8 @@
 # Synthetic issue preference state
 
+This note explains the optional issue-profile sensitivity mode. The default
+model remains scalar.
+
 ## Purpose
 
 Candidate support can compare a voter with a candidate separately on the five

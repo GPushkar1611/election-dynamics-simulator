@@ -527,8 +527,8 @@ def _simulate_steps(config: SimulationConfig, data: dict, seed: int = 42,
                     public_polls.append({**published, "event_id": event["event_id"],
                                          "announcement": "public"})
                     if config.strategic_voting > 0:
-                        # The poll is now common knowledge: voters who received it
-                        # desert candidates it shows cannot win (strategic.py).
+                        # Treat this public release as common knowledge for the
+                        # simplified strategic-voting utility adjustment.
                         viable = viable_candidates(published["shares"], candidate_ids)
                         before = support.argmax(axis=1)
                         strategic_utility[event["audience"]] = strategic_adjustment(

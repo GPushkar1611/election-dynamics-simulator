@@ -6,7 +6,7 @@ All values in the CSV files are **synthetic parameters** to be treated as model 
 
 ## 1. Prerequisites
 
-* Python 3.9+ (tested with Python 3.12, NumPy 2.x, pandas 3.x)
+* Python 3.12.10 and the pinned packages in the repository root `requirements.txt` for byte-identical dataset reproduction
 * `numpy` and `pandas`
 
 ## 2. Install

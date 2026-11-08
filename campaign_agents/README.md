@@ -22,7 +22,7 @@ Add `--overwrite` to run again into the same folder.
 
 On each decision day (`start_day`, then every `decide_every` days):
 
-1. **Observe.** Before anything else happens that day, the simulation polls `poll_sample_size` random voters on yesterday's state. Each respondent names their highest-support candidate, and the shares get Gaussian noise (`poll_noise`). The poll also gives shares per targeting group (Rural, Students, Farmers, ...; groups with fewer than 10 respondents are left out). This is all an agent sees; it never reads true opinions.
+1. **Observe.** Before anything else happens that day, the simulation polls `poll_sample_size` random voters on yesterday's state. Each respondent names their highest-support candidate, and the shares get Gaussian noise (`poll_noise`). The poll also gives shares per targeting group (Rural, Students, Farmers, ...; groups with fewer than 10 respondents are left out). All candidate agents deciding that day receive this same poll; voters do not see it unless a public poll event is released.
 2. **Decide.** The agent's strategy turns the poll into one `CampaignAction` lasting `decide_every` days (cut at election day). Its ID is `<candidate>_dayDD_<message_type>`.
 3. **Act.** Recipients are selected with the normal targeting code. The cost is recipients x active days. If the agent cannot afford it from `budget`, the action is skipped (logged with `taken: false`).
 
@@ -32,7 +32,7 @@ On each decision day (`start_day`, then every `decide_every` days):
 |---|---|
 | `greedy` | Message to the group where the candidate polls worst (`target_policy: group`). Uniform if the poll has no group data. |
 | `go_negative` | If trailing the poll leader by more than `smear_gap`: smear the leader, targeted with `policy`. Otherwise like `greedy`. |
-| `rebut` | If own poll share fell by more than `drop_alert` since this agent's previous poll: broad message targeted with `policy`. Otherwise like `greedy`. |
+| `rebut` | Historical name. If own poll share fell by more than `drop_alert` since its previous poll, send a broad message using `policy`. It does not identify or verify the cause of the drop. Otherwise like `greedy`. |
 
 With `distortion` > 0 the agent's own messages are `misleading` instead of `ordinary` (see `campaign_actions/README.md`).
 
@@ -62,5 +62,5 @@ With `distortion` > 0 the agent's own messages are `misleading` instead of `ordi
 ## Notes
 
 - The ranking policies (`high_influence`, `high_susceptibility`) rank fixed voter attributes, so repeated actions reach the same top voters every time.
-- Agents decide in candidate ID order, and all of them see the same poll on a given day.
+- Agents decide in candidate ID order, and all deciding agents see the same poll on a given day.
 - Agents use their own poll random stream. A run with agents is reproducible from its seed, and a run without agents is identical to one made before agents existed.

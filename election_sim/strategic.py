@@ -2,16 +2,15 @@
 
 Knowledge, not just opinion, drives this step:
 
-- A candidate agent's own poll is *private*: only that agent knows the
-  result, so voters cannot act on it.
+- A decision-day poll is shared by all candidate agents deciding that day.
+  Voters do not receive it, so it does not trigger voter response.
 - A `poll_release` news event is a *public announcement*: every voter
   receives the same poll and knows that everyone else received it too. The
-  result becomes *common knowledge*.
+  result is treated as *common knowledge* for a simplified voter response.
 
-Only with common knowledge can a supporter of a hopeless candidate expect
-other supporters to give up on that candidate as well. Switching to a
-front-runner is then rational, which is Duverger's law for single-winner
-plurality races.
+This is an epistemic-logic-inspired assumption, not a formal epistemic model:
+the simulator does not represent individual knowledge states or possible
+worlds. It captures a public-versus-agent-only information distinction.
 
 Model: the top VIABLE_COUNT candidates in the published poll are viable.
 Every voter who received the announcement lowers their utility for each

@@ -9,10 +9,10 @@ What voters *know* decides whether they vote strategically:
 
 | Poll | Who knows the result | Epistemic status | Effect on voters |
 |---|---|---|---|
-| A candidate agent's own poll (`diagnostics.polls`) | That agent only | Private knowledge | None |
-| A `poll_release` news event (`diagnostics.public_polls`) | Every voter, and every voter knows the others know | Public announcement, so **common knowledge** | Strategic voting |
+| Candidate decision-day poll (`diagnostics.polls`) | All candidate agents deciding that day; not voters | Shared agent information | None |
+| A `poll_release` news event (`diagnostics.public_polls`) | Every voter | Public announcement, interpreted as common knowledge | Strategic voting |
 
-Only when the poll is common knowledge can a supporter of a hopeless candidate expect the other supporters to give up on that candidate too ("I know that everyone knows C is losing"). Switching to a front-runner is then rational. This is Duverger's law for single-winner plurality races.
+The model treats a public poll as common knowledge, then applies a simplified utility penalty. It does not represent individual knowledge states or possible worlds, so this is an epistemic-logic-inspired mechanism rather than a formal epistemic model.
 
 ## Rule
 
@@ -57,11 +57,11 @@ Where to look:
 
 In C01, `switched_top_choice` is 0: no voter has CAND_0002 as their favourite. Its votes come from voters whose support is split, because a vote is drawn from the voter's support for every candidate. Strategic voting removes that partial support. In a closer three-way race, `switched_top_choice` is positive; the tests show this.
 
-## For the report
+## Scope
 
-Formalise a small Kripke-model example: 3 voters and 2 possible worlds ("C is viable" / "C is not viable").
-
-- A private poll removes the world for one agent only.
-- A public announcement removes it for everyone and creates common knowledge.
-
-Then show the simulated effect, with `strategic_voting` 0 versus > 0 and private versus public polls, as matched runs that use the same seed.
+The current code does not implement Kripke models or individual private polls.
+It shares decision-day poll data among candidate agents, keeps it hidden from
+voters, and treats a `poll_release` as a public announcement. A formal
+possible-worlds example can be included as course context, but should be clearly
+labelled as theory rather than implemented behavior. Compare
+`strategic_voting=0` and `>0` using matched seeds to show the implemented rule.
